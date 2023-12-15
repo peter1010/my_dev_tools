@@ -1,0 +1,6 @@
+*.pyc
+viminfo
+.netrwhist
+GPATH
+GTAGS
+GRTAGS

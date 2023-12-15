@@ -1,0 +1,113 @@
+" My vimrc file.
+
+" When started as "evim", evim.vim will already have done these settings.
+if v:progname =~? "evim"
+	finish
+endif
+
+"Does the env LS_MESSAGES end in utf8?
+if v:lang =~ "utf8$" || v:lang =~ "UTF-8$"
+	set fileencodings=utf-8,latin1
+endif
+
+" Use Vim defaults (much better!)
+set nocompatible
+
+" I use an indent of 4 in my code... but leave normal tabs at 8!
+set shiftwidth=4
+"set softtabstop=4
+set autoindent
+
+set tabstop=4
+set noexpandtab
+
+"All lines are prefixed with line number
+set number
+
+"Don't wrap long displaylines 
+set nowrap
+
+"Show arrow for tab and dot for trailing space
+set listchars=tab:\\u21d2\\x20,precedes:^,trail:\\u2022,extends:$
+set list
+
+" allow backspacing over everything in insert mode
+set backspace=indent,eol,start
+"set ai			" always set autoindenting on
+
+" read/write a .viminfo file, don't store more
+" than 50 lines of registers
+set viminfo='20,\"50
+
+" keep 50 lines of command line history
+set history=50
+
+" show the cursor position all the time
+set ruler
+
+set incsearch           " Do search as one entries the search target
+set laststatus=2
+
+set noerrorbells
+
+"For diffing I find folding confusing
+set diffopt=filler,foldcolumn:1,context:99999
+
+"Allowing folding but dont started folded
+"set foldmethod=indent
+"set foldcolumn=1
+"set foldlevel=9999
+
+"Disable annoying beep
+set vb t_vb=
+
+" All my user commands start with F12
+"let mapleader = "\<F12>"
+"let mapleader = "-"
+
+"edit my vimrc file
+nnoremap <F12>ev :vsplit $MYVIMRC<cr>
+
+nnoremap <F12>sv :source $MYVIMRC<cr>
+
+"Stop the default menus in gvim (we want our own)
+let did_install_default_menus = 4
+
+" Only do this part when compiled with support for autocommands
+if has("autocmd")
+    " When editing a file, always jump to the last cursor position
+    autocmd BufReadPost *
+    \ if line("'\"") > 0 && line ("'\"") <= line("$") |
+    \   exe "normal! g'\"" |
+    \ endif
+endif
+
+if has("gui_running")
+   set guioptions-=T
+endif
+
+" Switch syntax highlighting on, when the terminal has colors
+" Also switch on highlighting the last used search pattern.
+" But dont for vimdiff as the colours mixing is confusing
+if &t_Co > 2 || has("gui_running")
+    if &diff == 0
+        syntax on
+        set hlsearch
+    endif
+endif
+
+" Enable file type detection.
+" Use the default filetype settings, so that mail gets 'tw' set to 72,
+" 'cindent' is on in C files, etc.
+" Also load indent files, to automatically do language-dependent indenting.
+filetype plugin indent on
+
+autocmd FileType html set shiftwidth=2
+autocmd FileType html set softtabstop=2
+
+
+if &term=="xterm"
+    set t_Co=8        " Set number of colours to 8 (same as linux console)
+    set t_Sb=[4%dm
+    set t_Sf=[3%dm
+endif
