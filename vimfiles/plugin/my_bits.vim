@@ -66,7 +66,6 @@ command! SNIPPET call Snippet()
 
 
 if !has('pythonx')
-    echo "Python not installed"
     finish
 endif
 
