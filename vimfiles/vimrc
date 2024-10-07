@@ -23,9 +23,10 @@ set noexpandtab
 
 "All lines are prefixed with line number
 set number
-
+set colorcolumn=133
 "Don't wrap long displaylines 
 set nowrap
+
 
 "Show arrow for tab and dot for trailing space
 set listchars=tab:\\u21d2\\x20,precedes:^,trail:\\u2022,extends:$
