@@ -39,30 +39,9 @@ function! Trim()
     execute '%s/\s\+$//e'
 endfunc
 
-
-function! Snippet()
-    " Find the ident used at next non empty line
-    let savepos = getpos('.')
-    call cursor(savepos[1], 1)
-    call search('^\s*[^\s]', 'e')
-    let line = getline('.')
-    let ident = strpart(line, 0, col('.') - 1)
-    let line = strpart(line, col('.')-1)
-    " Depending on the file-type add a function header or file header
-    let ftype = &filetype
-    if ftype == "c"
-        echo "C-file type"
-        call append(line('.')-1, "/*************************************************************")
-        call append(line('.')-1, l:line)
-        call append(line('.')-1, "*************************************************************/")
-    endif
-endfunc
-
-
 command! TABIFY call Tabify()
 command! SPACIFY call Spacify()
 command! TRIM call Trim()
-command! SNIPPET call Snippet()
 
 
 if !has('pythonx')
@@ -82,21 +61,26 @@ let &makeprg = 'python "' . s:path . '/build.py" %:p'
 " -> "filename", line y:x E:comment
 set efm=\"%f\"\\,\ line\ %l:%c\ %t:%m
 
+execute 'pythonx import sys'
+
 function! Gtag()
-    execute 'pythonx import sys'
     execute 'pythonx sys.argv = [r"' . s:path . '/gtags.py", "b"]'
     execute 'pyxfile ' . s:path . '/gtags.py'
 endfunc
 
 
 function! SetCScope()
-    execute 'pythonx import sys'
     execute 'pythonx sys.argv = [r"' . s:path . '/gtags.py", "c"]'
     execute 'pyxfile ' . s:path . '/gtags.py'
 endfunc
 
 
 command! GTAG call Gtag()
+
+function! DetectIndentation()
+    execute 'pythonx sys.argv = [r"' . s:path . '/gtags.py", "b"]'
+    execute 'pyxfile ' . s:path . '/detect_indent.py'
+endfunc
 
 "call SetCScope()
 " vim: shiftwidth=4 expandtab tabstop=4 :
