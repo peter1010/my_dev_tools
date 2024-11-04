@@ -7,40 +7,14 @@ endif
 
 let g:did_my_bits = 1
 
-
-function! Tabify_line(ident, spaces)
-    let spaces_in_tab = repeat(' ', &tabstop)
-    let result = substitute(a:ident, spaces_in_tab, '\t', 'g')
-    let result = substitute(result, ' \+\ze\t', '', 'g')
-    if a:spaces == 1
-        let result = substitute(result, '\t', spaces_in_tab, 'g')
-    endif
-    return result
-endfunc
-
-
-function! Tabify()
-    let savepos = getpos('.')
-    execute '%s/^\s\+/\=Tabify_line(submatch(0),0)/e'
-    call setpos('.', savepos)
-endfunc
-
-
-function! Spacify()
-    let savepos = getpos('.')
-    execute '%s/^\s\+/\=Tabify_line(submatch(0),1)/e'
-    call setpos('.', savepos)
-endfunc
-
-
 function! Trim()
     " find whitespace at end of line and replace with nothing (/e means don't
     " erro if nothing found
     execute '%s/\s\+$//e'
 endfunc
 
-command! TABIFY call Tabify()
-command! SPACIFY call Spacify()
+command! TABIFY call my_bits#tabify#Tabify()
+command! SPACIFY call my_bits#tabify#Spacify()
 command! TRIM call Trim()
 
 
