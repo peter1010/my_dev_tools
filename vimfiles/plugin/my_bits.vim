@@ -42,13 +42,6 @@ function! Gtag()
     execute 'pyxfile ' . s:path . '/gtags.py'
 endfunc
 
-
-function! SetCScope()
-    execute 'pythonx sys.argv = [r"' . s:path . '/gtags.py", "c"]'
-    execute 'pyxfile ' . s:path . '/gtags.py'
-endfunc
-
-
 command! GTAG call Gtag()
 
 function! DetectIndentation(language)
@@ -56,5 +49,15 @@ function! DetectIndentation(language)
     execute 'pyxfile ' . s:path . '/detect_indent.py'
 endfunc
 
-"call SetCScope()
-" vim: shiftwidth=4 expandtab tabstop=4 :
+
+function! LspGet(type)
+    execute 'pythonx sys.argv = [r"' . s:path . '/lsp/client.py", r"' . a:type . '"]'
+    execute 'pyxfile ' . s:path . '/lsp/client.py'
+endfunc
+
+
+command! LSPxDCL call LspGet("declaration")
+command! LSPxDEF call LspGet("definition")
+command! LSPxIMP call LspGet("implementation")
+command! LSPxREF call LspGet("references")
+command! LSPxHOV call LspGet("hover")
