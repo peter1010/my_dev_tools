@@ -3,5 +3,5 @@ if exists("b:my_ftplugin")
 endif
 
 let b:my_ftplugin = 1
-call DetectIndentation()
+call DetectIndentation("cpp")
 

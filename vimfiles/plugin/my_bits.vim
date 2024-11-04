@@ -77,8 +77,8 @@ endfunc
 
 command! GTAG call Gtag()
 
-function! DetectIndentation()
-    execute 'pythonx sys.argv = [r"' . s:path . '/gtags.py", "b"]'
+function! DetectIndentation(language)
+    execute 'pythonx sys.argv = [r"' . s:path . '/detect_indent.py", r"' . a:language . '"]'
     execute 'pyxfile ' . s:path . '/detect_indent.py'
 endfunc
 
