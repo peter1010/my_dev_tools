@@ -24,7 +24,7 @@ set noexpandtab
 "All lines are prefixed with line number
 set number
 set colorcolumn=133
-"Don't wrap long displaylines 
+"Don't wrap long displaylines
 set nowrap
 
 
@@ -112,3 +112,13 @@ if &term=="xterm"
     set t_Sb=[4%dm
     set t_Sf=[3%dm
 endif
+
+let hour=strftime("%H")
+if hour < 12
+  colorscheme morning
+elseif hour < 17
+  colorscheme default
+else
+  colorscheme evening
+endif
+
