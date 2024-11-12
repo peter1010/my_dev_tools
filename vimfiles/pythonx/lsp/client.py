@@ -37,7 +37,9 @@ class LanguageServer:
 			print("Language Server not responding")
 			return
 		contents = json.loads(msg.decode('utf-8'))
-		print(contents)
+#		print(contents)
+		vim.command('edit {}'.format(contents[0]["name"]))
+		vim.command('call cursor({},{})'.format(contents[0]["row"], contents[0]["col"]))
 
 
 def main():

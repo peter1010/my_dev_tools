@@ -111,32 +111,38 @@ class LanguageServer:
 		result = self.recv_msg()
 
 
-	def send_goto_declaration(self, file_path, row, col):
+	def req_ping(self):
+		return "pong"
+
+
+	def add_position(self, row, col):
+		return {
+			"line" : row - 1,
+			"character" : col - 1
+		}
+
+
+	def add_uri(self, file_path):
+		return {
+			"uri" : "file:///" + file_path
+		}
+
+
+	def req_find_declaration(self, file_path, row, col):
 		if not self.has_declarations:
-			return self.send_goto_definition(file_path, row, col)
-		uri = "file:///" + file_path
+			return self.req_find_definition(file_path, row, col)
 		params = {
-			"textDocument" : {
-				"uri" : uri
-			},
-			"position" : {
-				"line" : row,
-				"character" : col
-			},
+			"textDocument" : self.add_uri(file_path),
+			"position" : self.add_position(row, col),
 		}
 		self.send_msg("textDocument/declaration", params)
 		result = self.recv_msg()
 
-	def send_goto_definition(self, file_path, row, col):
-		uri = "file:///" + file_path
+
+	def req_find_definition(self, file_path, row, col):
 		params = {
-			"textDocument" : {
-				"uri" : uri
-			},
-			"position" : {
-				"line" : row - 1,
-				"character" : col - 1
-			},
+			"textDocument" : self.add_uri(file_path),
+			"position" : self.add_position(row, col),
 		}
 		result, error = self.do_transaction("textDocument/definition", params)
 		processed_result = []
@@ -149,30 +155,19 @@ class LanguageServer:
 		return processed_result
 
 
-	def send_goto_implementation(self, file_path, row, col):
-		uri = "file:///" + file_path
+	def req_find_implementation(self, file_path, row, col):
 		params = {
-			"textDocument" : {
-				"uri" : uri
-			},
-			"position" : {
-				"line" : row - 1,
-				"character" : col - 1
-			},
+			"textDocument" : self.add_uri(file_path),
+			"position" : self.add_position(row, col),
 		}
 		result, error = self.do_transaction("textDocument/implementation", params)
 		print(result, error)
 
-	def send_find_references(self, file_path, row, col):
-		uri = "file:///" + file_path
+
+	def req_find_references(self, file_path, row, col):
 		params = {
-			"textDocument" : {
-				"uri" : uri
-			},
-			"position" : {
-				"line" : row - 1,
-				"character" : col - 1
-			},
+			"textDocument" : self.add_uri(file_path),
+			"position" : self.add_position(row, col),
 			"context" : {
 				"includeDeclaration" : True
 			}
@@ -180,16 +175,11 @@ class LanguageServer:
 		result, error = self.do_transaction("textDocument/implementation", params)
 		print(result, error)
 
-	def send_hover(self, file_path, row, col):
-		uri = "file:///" + file_path
+
+	def req_hover(self, file_path, row, col):
 		params = {
-			"textDocument" : {
-				"uri" : uri
-			},
-			"position" : {
-				"line" : row - 1,
-				"character" : col - 1
-			},
+			"textDocument" : self.add_uri(file_path),
+			"position" : self.add_position(row, col),
 			"context" : {
 				"includeDeclaration" : True
 			}
@@ -210,7 +200,7 @@ def listen(ls):
 		print(addr)
 		contents = json.loads(msg.decode("utf-8"))
 		print(contents)
-		func = getattr(ls, "send_" + contents["method"])
+		func = getattr(ls, "req_" + contents["method"])
 		result = func(**contents["args"])
 		response = json.dumps(result).encode("utf-8")
 		sock.sendto(response, addr)
