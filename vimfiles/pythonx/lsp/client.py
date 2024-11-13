@@ -5,21 +5,30 @@ import os
 
 class LanguageServer:
 	def __init__(self):
-		sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-		self.sockname = b"/tmp/lsp_client"
-		self.servername = b"/tmp/lsp"
+		if hasattr(socket, "AF_UNIX"):
+			sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+			self.sockname = b"/tmp/lsp_client"
+			self.servername = b"/tmp/lsp"
+		else:
+			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			self.sockname = ("127.0.0.1", 8701)
+			self.servername = ("127.0.0.1", 8702)
 		self.sock = sock
 		self.sock.bind(self.sockname)
 
-	def __del__(self):
-		os.unlink(self.sockname)
 
-	def request(self, keyword, filename, row, col):
-		print(keyword, filename, row, col)
+	def __del__(self):
+		if not isinstance(self.sockname, tuple):
+			os.unlink(self.sockname)
+
+
+	def request(self, language, keyword, filename, row, col):
+#		print(language, keyword, filename, row, col)
 		data = {
-			"method" : keyword,
-			"args" : {
-				"file_path" : filename,
+			"lng" : language,
+			"mtd" : keyword,
+			"arg" : {
+				"pth" : filename,
 				"row" : row,
 				"col" : col
 			}
@@ -47,9 +56,10 @@ def main():
 	# 1,1 is top left
 	row = int(vim.eval('line(".")'))
 	col = int(vim.eval('col(".")'))
+	language = vim.eval('&filetype')
 	buf = vim.current.buffer
 	ls = LanguageServer()
-	ls.request(keyword, buf.name, row, col)
+	ls.request(language, keyword, buf.name, row, col)
 
 
 if __name__ == "__main__":

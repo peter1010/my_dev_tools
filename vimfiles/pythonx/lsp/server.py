@@ -7,6 +7,20 @@ import socket
 import argparse
 from urllib.parse import urlparse
 
+def add_position(row, col):
+	return {
+		"line" : row - 1,
+		"character" : col - 1
+	}
+
+
+def add_uri(file_path):
+	return {
+		"uri" : "file:" + file_path
+	}
+
+
+
 class LanguageServer:
 
 	def __init__(self, lsp_server_args):
@@ -33,16 +47,16 @@ class LanguageServer:
 
 
 	def send_msg(self, method, params=None):
-		request = {}
-		request['jsonrpc'] = '2.0'
-		request['method'] = method
+		self.Id += 1
+		request = {
+			'jsonrpc': '2.0',
+			'method': method,
+			'id': self.Id
+		}
 		if params:
 			request['params'] = params
-	#    if Id is not None:
-		self.Id += 1
-		request['id'] = self.Id
-	#        self._requests[Id] = r
-		request = json.dumps(request, separators=(',',':'), sort_keys=True).encode("ascii")
+
+		request = json.dumps(request, separators=(',',':'), sort_keys=True).encode("utf-8")
 		headers = b'Content-Length: %d\r\n\r\n' % len(request)
 		msg = headers + request
 		self.proc.stdin.write(msg)
@@ -115,34 +129,21 @@ class LanguageServer:
 		return "pong"
 
 
-	def add_position(self, row, col):
-		return {
-			"line" : row - 1,
-			"character" : col - 1
-		}
-
-
-	def add_uri(self, file_path):
-		return {
-			"uri" : "file:///" + file_path
-		}
-
-
-	def req_find_declaration(self, file_path, row, col):
+	def req_find_declaration(self, pth, row, col):
 		if not self.has_declarations:
-			return self.req_find_definition(file_path, row, col)
+			return self.req_find_definition(pth, row, col)
 		params = {
-			"textDocument" : self.add_uri(file_path),
-			"position" : self.add_position(row, col),
+			"textDocument" : add_uri(pth),
+			"position" : add_position(row, col),
 		}
 		self.send_msg("textDocument/declaration", params)
 		result = self.recv_msg()
 
 
-	def req_find_definition(self, file_path, row, col):
+	def req_find_definition(self, pth, row, col):
 		params = {
-			"textDocument" : self.add_uri(file_path),
-			"position" : self.add_position(row, col),
+			"textDocument" : add_uri(pth),
+			"position" : add_position(row, col),
 		}
 		result, error = self.do_transaction("textDocument/definition", params)
 		processed_result = []
@@ -155,19 +156,19 @@ class LanguageServer:
 		return processed_result
 
 
-	def req_find_implementation(self, file_path, row, col):
+	def req_find_implementation(self, pth, row, col):
 		params = {
-			"textDocument" : self.add_uri(file_path),
-			"position" : self.add_position(row, col),
+			"textDocument" : add_uri(pth),
+			"position" : add_position(row, col),
 		}
 		result, error = self.do_transaction("textDocument/implementation", params)
 		print(result, error)
 
 
-	def req_find_references(self, file_path, row, col):
+	def req_find_references(self, pth, row, col):
 		params = {
-			"textDocument" : self.add_uri(file_path),
-			"position" : self.add_position(row, col),
+			"textDocument" : add_uri(pth),
+			"position" : add_position(row, col),
 			"context" : {
 				"includeDeclaration" : True
 			}
@@ -176,10 +177,10 @@ class LanguageServer:
 		print(result, error)
 
 
-	def req_hover(self, file_path, row, col):
+	def req_hover(self, pth, row, col):
 		params = {
-			"textDocument" : self.add_uri(file_path),
-			"position" : self.add_position(row, col),
+			"textDocument" : add_uri(pth),
+			"position" : add_position(row, col),
 			"context" : {
 				"includeDeclaration" : True
 			}
@@ -188,31 +189,47 @@ class LanguageServer:
 		print(result, error)
 
 
-def listen(ls):
-	sockname = "/tmp/lsp"
-	sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-	if os.path.exists(sockname):
-		os.unlink(sockname)
-	sock.bind(sockname)
+class ProxyServer:
 
-	while True:
-		msg, addr = sock.recvfrom(2048)
-		print(addr)
-		contents = json.loads(msg.decode("utf-8"))
-		print(contents)
-		func = getattr(ls, "req_" + contents["method"])
-		result = func(**contents["args"])
-		response = json.dumps(result).encode("utf-8")
-		sock.sendto(response, addr)
+	def __init__(self):
+		self.languages = {}
+		self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+		self.sockname = "/tmp/lsp"
+		if os.path.exists(self.sockname):
+			os.unlink(self.sockname)
+		self.sock.bind(self.sockname)
 
 
-def get_ls(language):
-	language = language.upper()
-	if language == "C":
-		return ["clangd"]
-	if language == "PY":
-		return ["pylsp"]
-	return None
+	def run(self):
+		while True:
+			msg, addr = self.sock.recvfrom(2048)
+			print(addr)
+			contents = json.loads(msg.decode("utf-8"))
+			print(contents)
+			ls = self.get_ls(contents["lng"])
+			func = getattr(ls, "req_" + contents["mtd"])
+			result = func(**contents["arg"])
+			response = json.dumps(result).encode("utf-8")
+			self.sock.sendto(response, addr)
+
+
+	def get_ls(self, language):
+		language = language.upper()
+		ls = self.languages.get(language, None)
+		if not ls:
+			if language == "C":
+				executable = ["clangd"]
+			if language == "PYTHON":
+				executable = ["pylsp"]
+			if executable:
+				ls = LanguageServer(executable)
+				ls.send_initialize()
+				self.languages[language] = ls
+		return ls
+
+
+	def close(self):
+		ls.send_shutdown()
 
 
 def main():
@@ -220,23 +237,18 @@ def main():
 		prog='Language Server',
 		description='Wrapper for a language server',
 	)
-	parser.add_argument('-l', '--language', help='Programing language', default='C')
 	parser.add_argument('-s', '--source_dir', help='Directory where all source files can be found', default='.')
 
 	args = parser.parse_args()
 
-	executable = get_ls(args.language)
 	source_dir = args.source_dir
 	os.chdir(source_dir)
 
-	if executable:
-		ls = LanguageServer(executable)
-
-	ls.send_initialize()
-	listen(ls)
-
-	ls.send_shutdown()
+	proxy = ProxyServer()
+	proxy.run()
+	proxy.close()
 	input("Press Return to exit")
+
 
 if __name__ == "__main__":
 	main()
