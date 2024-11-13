@@ -56,8 +56,8 @@ function! LspGet(type)
 endfunc
 
 
-command! LSPxDCL call LspGet("goto_declaration")
-command! LSPxDEF call LspGet("goto_definition")
-command! LSPxIMP call LspGet("goto_implementation")
-command! LSPxREF call LspGet("goto_references")
+command! LSPxDCL call LspGet("find_declaration")
+command! LSPxDEF call LspGet("find_definition")
+command! LSPxIMP call LspGet("find_implementation")
+command! LSPxREF call LspGet("find_references")
 command! LSPxHOV call LspGet("hover")
