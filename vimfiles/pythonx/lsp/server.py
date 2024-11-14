@@ -7,6 +7,7 @@ import socket
 import argparse
 from urllib.parse import urlparse
 
+
 def add_position(row, col):
 	return {
 		"line" : row - 1,
@@ -19,6 +20,12 @@ def add_uri(file_path):
 		"uri" : "file:" + file_path
 	}
 
+
+def get_file_path(uri):
+	name = urlparse(uri).path
+	if name.startswith('/c:'):
+		return name[1:]
+	return name
 
 
 class LanguageServer:
@@ -149,7 +156,7 @@ class LanguageServer:
 		processed_result = []
 		for entry in result:
 			# print(result)
-			name = urlparse(entry['uri']).path
+			name = get_file_path(entry['uri'])
 			location = entry["range"]["start"]
 			print(name, location)
 			processed_result.append({"name" : name, "row" : location["line"] + 1, "col" : location["character"] + 1})
@@ -193,18 +200,27 @@ class ProxyServer:
 
 	def __init__(self):
 		self.languages = {}
-		self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-		self.sockname = "/tmp/lsp"
-		if os.path.exists(self.sockname):
-			os.unlink(self.sockname)
+		if hasattr(socket, "AF_UNIX"):
+			print("Selecting AF_UNIX socket")
+			self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+			self.sockname = "/tmp/lsp"
+			if os.path.exists(self.sockname):
+				os.unlink(self.sockname)
+		else:
+			print("Selecting AF_INET socket")
+			self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			self.sockname = ("127.0.0.1", 8702)
+		print("Binding to {}".format(self.sockname))
 		self.sock.bind(self.sockname)
 
 
 	def run(self):
+		buffer = bytearray(2048)
 		while True:
-			msg, addr = self.sock.recvfrom(2048)
-			print(addr)
-			contents = json.loads(msg.decode("utf-8"))
+			# print("Wait for incomming msg")
+			nbytes, addr = self.sock.recvfrom_into(buffer)
+			# print(addr)
+			contents = json.loads(buffer[:nbytes].decode("utf-8"))
 			print(contents)
 			ls = self.get_ls(contents["lng"])
 			func = getattr(ls, "req_" + contents["mtd"])

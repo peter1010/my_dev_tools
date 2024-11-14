@@ -1,7 +1,18 @@
 import socket
-import vim
 import json
 import os
+
+try:
+	import vim
+except ImportError:
+	import sys
+	class vim:
+
+		@staticmethod
+		def eval(x):
+			return 10
+
+	sys.argv = ["","test"]
 
 class LanguageServer:
 	def __init__(self):
@@ -14,7 +25,7 @@ class LanguageServer:
 			self.sockname = ("127.0.0.1", 8701)
 			self.servername = ("127.0.0.1", 8702)
 		self.sock = sock
-		self.sock.bind(self.sockname)
+		self.sock.connect(self.servername)
 
 
 	def __del__(self):
@@ -35,7 +46,8 @@ class LanguageServer:
 		}
 		request = json.dumps(data, separators=(',',':')).encode("utf-8")
 		try:
-			self.sock.sendto(request, self.servername)
+			# print("Sending to {}".format(self.servername))
+			self.sock.sendall(request)
 		except (FileNotFoundError, ConnectionRefusedError):
 			print("Language Server not running")
 			return
@@ -57,9 +69,9 @@ def main():
 	row = int(vim.eval('line(".")'))
 	col = int(vim.eval('col(".")'))
 	language = vim.eval('&filetype')
-	buf = vim.current.buffer
+	filename = vim.current.buffer.name
 	ls = LanguageServer()
-	ls.request(language, keyword, buf.name, row, col)
+	ls.request(language, keyword, filename, row, col)
 
 
 if __name__ == "__main__":
