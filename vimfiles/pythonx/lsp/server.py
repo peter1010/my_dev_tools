@@ -111,6 +111,13 @@ class LanguageServer:
 		params = {
 			"processId" : os.getpid(),
 			"capabilities" : {
+				"textDocument" : {
+					"hover" : {
+						"currentFormat" : [
+							"plaintext"
+						]
+					}
+				}
 			}
 		}
 		result, error = self.do_transaction("initialize", params)
@@ -193,7 +200,11 @@ class LanguageServer:
 			}
 		}
 		result, error = self.do_transaction("textDocument/hover", params)
-		print(result, error)
+		result = result["contents"]
+		print("debug:", result, error)
+		if not isinstance(result, str):
+			kind = result["kind"]
+			value = result["value"]
 
 
 class ProxyServer:
@@ -202,16 +213,17 @@ class ProxyServer:
 		self.languages = {}
 		if hasattr(socket, "AF_UNIX"):
 			print("Selecting AF_UNIX socket")
-			self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+			sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
 			self.sockname = "/tmp/lsp"
 			if os.path.exists(self.sockname):
 				os.unlink(self.sockname)
 		else:
 			print("Selecting AF_INET socket")
-			self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 			self.sockname = ("127.0.0.1", 8702)
 		print("Binding to {}".format(self.sockname))
-		self.sock.bind(self.sockname)
+		sock.bind(self.sockname)
+		self.sock = sock
 
 
 	def run(self):
@@ -219,13 +231,15 @@ class ProxyServer:
 		while True:
 			# print("Wait for incomming msg")
 			nbytes, addr = self.sock.recvfrom_into(buffer)
-			# print(addr)
+			print(addr)
 			contents = json.loads(buffer[:nbytes].decode("utf-8"))
 			print(contents)
 			ls = self.get_ls(contents["lng"])
 			func = getattr(ls, "req_" + contents["mtd"])
 			result = func(**contents["arg"])
+			print(result)
 			response = json.dumps(result).encode("utf-8")
+			print(response)
 			self.sock.sendto(response, addr)
 
 

@@ -14,22 +14,25 @@ except ImportError:
 
 	sys.argv = ["","test"]
 
+
 class LanguageServer:
+
 	def __init__(self):
 		if hasattr(socket, "AF_UNIX"):
 			sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-			self.sockname = b"/tmp/lsp_client"
 			self.servername = b"/tmp/lsp"
+			# AF_UNIX Datagram doesn't automatically create the client sockname
+			self.sockname = b"/tmp/lsp_client"
+			sock.bind(self.sockname)
 		else:
 			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-			self.sockname = ("127.0.0.1", 8701)
 			self.servername = ("127.0.0.1", 8702)
+		sock.connect(self.servername)
 		self.sock = sock
-		self.sock.connect(self.servername)
 
 
 	def __del__(self):
-		if not isinstance(self.sockname, tuple):
+		if hasattr(self, "sockname"):
 			os.unlink(self.sockname)
 
 
@@ -52,12 +55,13 @@ class LanguageServer:
 			print("Language Server not running")
 			return
 		self.sock.settimeout(2)
+		buffer = bytearray(2048)
 		try:
-			msg = self.sock.recv(2048)
+			nbytes = self.sock.recv_into(buffer)
 		except TimeoutError:
 			print("Language Server not responding")
 			return
-		contents = json.loads(msg.decode('utf-8'))
+		contents = json.loads(buffer[:nbytes].decode('utf-8'))
 #		print(contents)
 		vim.command('edit {}'.format(contents[0]["name"]))
 		vim.command('call cursor({},{})'.format(contents[0]["row"], contents[0]["col"]))
