@@ -17,6 +17,10 @@ command! TABIFY call my_bits#tabify#Tabify()
 command! SPACIFY call my_bits#tabify#Spacify()
 command! TRIM call Trim()
 
+function! DetectIndentation(language)
+    call my_bits#tabify#DetectIndent(a:language)
+endfunc
+
 
 if !has('pythonx')
     finish
@@ -43,12 +47,6 @@ function! Gtag()
 endfunc
 
 command! GTAG call Gtag()
-
-function! DetectIndentation(language)
-    execute 'pythonx sys.argv = [r"' . s:path . '/detect_indent.py", r"' . a:language . '"]'
-    execute 'pyxfile ' . s:path . '/detect_indent.py'
-endfunc
-
 
 function! LspGet(type)
     execute 'pythonx sys.argv = [r"' . s:path . '/lsp/client.py", r"' . a:type . '"]'
