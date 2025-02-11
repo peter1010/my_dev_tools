@@ -150,6 +150,7 @@ class LanguageServer:
 			"textDocument" : add_uri(pth),
 			"position" : add_position(row, col),
 		}
+		print(params)
 		self.send_msg("textDocument/declaration", params)
 		result = self.recv_msg()
 
@@ -211,7 +212,8 @@ class ProxyServer:
 
 	def __init__(self):
 		self.languages = {}
-		if hasattr(socket, "AF_UNIX"):
+#		if hasattr(socket, "AF_UNIX"):
+		if False:
 			print("Selecting AF_UNIX socket")
 			sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
 			self.sockname = "/tmp/lsp"
@@ -219,28 +221,43 @@ class ProxyServer:
 				os.unlink(self.sockname)
 		else:
 			print("Selecting AF_INET socket")
-			sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			#sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.sockname = ("127.0.0.1", 8702)
 		print("Binding to {}".format(self.sockname))
 		sock.bind(self.sockname)
+		sock.listen(1)
 		self.sock = sock
 
 
 	def run(self):
 		buffer = bytearray(2048)
 		while True:
-			# print("Wait for incomming msg")
-			nbytes, addr = self.sock.recvfrom_into(buffer)
-			print(addr)
-			contents = json.loads(buffer[:nbytes].decode("utf-8"))
-			print(contents)
-			ls = self.get_ls(contents["lng"])
-			func = getattr(ls, "req_" + contents["mtd"])
-			result = func(**contents["arg"])
-			print(result)
-			response = json.dumps(result).encode("utf-8")
-			print(response)
-			self.sock.sendto(response, addr)
+			print("Wait for incomming connection")
+			(conn, addr) = self.sock.accept()
+			while True:
+				print(addr)
+				print("Wait for incomming msg")
+				nbytes = conn.recv_into(buffer)
+				if nbytes == 0:
+					break
+				contents = json.loads(buffer[:nbytes].decode("utf-8"))
+				print(contents)
+				_id, contents = contents
+				ls = self.get_ls(contents["lng"])
+				if ls:
+					func = getattr(ls, "req_" + contents["mtd"])
+					response = func(**contents["arg"])
+				else:
+					response = None
+				if response == None:
+					result = [_id, ["Err"]]
+				else:
+					result = [_id, ["Ok", response]]
+				print(result)
+				response = json.dumps(result).encode("utf-8")
+				print(response)
+				conn.send(response)
 
 
 	def get_ls(self, language):
@@ -249,8 +266,10 @@ class ProxyServer:
 		if not ls:
 			if language == "C":
 				executable = ["clangd"]
-			if language == "PYTHON":
+			elif language == "PYTHON":
 				executable = ["pylsp"]
+			else:
+				executable = None
 			if executable:
 				ls = LanguageServer(executable)
 				ls.send_initialize()

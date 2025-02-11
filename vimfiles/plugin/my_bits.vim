@@ -54,8 +54,9 @@ function! LspGet(type)
     execute 'pyxfile ' . s:path . '/lsp/client.py'
 endfunc
 
+"function! my_bits#lsp#Lookup(keyword)
 
-command! LSPxDCL call LspGet("find_declaration")
+command! LSPxDCL call my_bits#lsp#Lookup("find_declaration")
 command! LSPxDEF call LspGet("find_definition")
 command! LSPxIMP call LspGet("find_implementation")
 command! LSPxREF call LspGet("find_references")
