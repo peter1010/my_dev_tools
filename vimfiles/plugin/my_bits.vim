@@ -39,9 +39,9 @@ let &makeprg = 'python "' . s:path . '/build.py" %:p'
 " -> "filename", line y:x E:comment
 set efm=\"%f\"\\,\ line\ %l:%c\ %t:%m
 
-execute 'pythonx import sys'
 
 function! Gtag()
+    execute 'pythonx import sys'
     execute 'pythonx sys.argv = [r"' . s:path . '/gtags.py", "b"]'
     execute 'pyxfile ' . s:path . '/gtags.py'
 endfunc
@@ -49,6 +49,7 @@ endfunc
 command! GTAG call Gtag()
 
 function! LspGet(type)
+    execute 'pythonx import sys'
     execute 'pythonx sys.argv = [r"' . s:path . '/lsp/client.py", r"' . a:type . '"]'
     execute 'pyxfile ' . s:path . '/lsp/client.py'
 endfunc
