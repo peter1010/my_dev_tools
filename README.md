@@ -21,3 +21,7 @@ Copy all files in the repo vimfiles folder into the vimfiles folder in %USERPROF
 Put the "\.vimrc" in the Home directory. It then sources the vimrc file in .vim folder.
 
 Copy all files in the repo vimfiles folder into the .vim folder in Home.
+
+## Global
+
+A gtags.conf file
