@@ -25,3 +25,20 @@ Copy all files in the repo vimfiles folder into the .vim folder in Home.
 ## Global
 
 A gtags.conf file
+
+## build_shell
+
+### Build and install
+
+python version.py will print out the version number i.e. $pkgver
+
+To build and install follow PEP517...
+
+Install the python packages "pip", "setuptools", "wheel" and "build".
+
+To build the package...
+
+python -m build
+
+pip install dist/build_shell-$pkgver-py3-none-any.whl
+
