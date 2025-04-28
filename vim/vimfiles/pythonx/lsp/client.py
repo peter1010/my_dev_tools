@@ -15,6 +15,18 @@ except ImportError:
 	sys.argv = ["","test"]
 
 
+def get_runtime_dir():
+	if hasattr(socket, "AF_UNIX"):
+		return os.getenv("XDG_RUNTIME_DIR")
+	return os.getenv("TEMP")
+
+
+def ChkOrLaunchServer():
+	# Get PID file
+	pid_file = os.path.join(get_runtime_dir(), "lsp.pid")
+	print(pid_file)
+
+
 class LanguageServer:
 
 	def __init__(self):
@@ -68,6 +80,8 @@ class LanguageServer:
 
 
 def main():
+	ChkOrLaunchServer()
+
 	keyword = sys.argv[1]
 	# 1,1 is top left
 	row = int(vim.eval('line(".")'))
