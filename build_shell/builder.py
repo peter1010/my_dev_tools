@@ -1,8 +1,13 @@
 
 
 class Builder:
-	def __init(self, build_dir):
+	def __init__(self, build_dir):
 		self.build_dir = build_dir
+
+	def get_output(self, gui):
+		self.gui = gui
+		return self.get_child_output()
+
 
 	def get_child_output(self):
 		if self.child:

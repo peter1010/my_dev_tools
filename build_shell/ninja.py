@@ -7,6 +7,9 @@ class Builder(Base):
 	def __init__(self, build_dir):
 		super().__init__(build_dir)
 
+	def __str__(self):
+		return "-- NINJA BUILDER --"
+
 	def launch(self, clean):
 
 		env = os.environ
@@ -24,13 +27,23 @@ class Builder(Base):
 
 	def send_output(self, line):
 		if line.startswith('[ninja '):
-			self.gui.output_status(NewText)
+			self.gui.output_status(line)
 			return
-		if NewText.find("warning:") >= 0:
-			self.gui.output_warning(NewText)
+		if line.find("warning:") >= 0:
+			self.gui.output_warning(line)
 			return
-		if NewText.find("error:") >= 0:
-			self.gui.output_error(NewText)
+		if line.find("error:") >= 0:
+			self.gui.output_error(line)
 			return
-		self.gui.output_text(NewText)
+		self.gui.output_text(line)
 
+	def get_location(self, line):
+		parts = line.split(":")
+		if len(parts) < 2:
+			return None, None
+		try:
+			line_num = int(parts[1])
+		except ValueError:
+			return None, None
+		filename = parts[0].strip()
+		return filename, line_num

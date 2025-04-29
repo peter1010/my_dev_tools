@@ -107,8 +107,10 @@ class App:
 			return  make.Builder(root_dir)
 		for f in files:
 			new_root = os.path.join(root_dir, f)
-			if os.is_dir(new_root):
-				return self.find_build_type(new_root)
+			if os.path.isdir(new_root):
+				builder = self.find_build_type(new_root)
+				if builder:
+					return builder
 		return None
 
 
@@ -116,6 +118,7 @@ class App:
 		builder = self.find_build_type()
 		
 		if builder:
+			self.output_text(str(builder))
 			builder.launch(clean)
 			self.builder = builder
 			self.warning_count = 0;

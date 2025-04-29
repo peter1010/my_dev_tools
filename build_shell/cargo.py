@@ -5,8 +5,11 @@ from builder import Builder as Base
 
 class Builder(Base):
 	def __init__(self, build_dir):
-		super().__init(build_dir)
+		super().__init__(build_dir)
 		self.prev_line = ""
+
+	def __str__(self):
+		return "-- CARGO BUILDER --"
 
 	def launch(self, clean):
 		os.chdir(self.build_dir)
@@ -21,11 +24,6 @@ class Builder(Base):
 
 		self.child = child
 		self.leftover_data = b""
-
-
-	def get_output(self, gui):
-		self.gui = gui
-		return self.get_child_output()
 
 
 	def send_output(self, line):
