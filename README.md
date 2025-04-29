@@ -30,15 +30,7 @@ A gtags.conf file
 
 ### Build and install
 
-python version.py will print out the version number i.e. $pkgver
+To run the package...
 
-To build and install follow PEP517...
-
-Install the python packages "pip", "setuptools", "wheel" and "build".
-
-To build the package...
-
-python -m build
-
-pip install dist/build_shell-$pkgver-py3-none-any.whl
+python -m build_shell
 
