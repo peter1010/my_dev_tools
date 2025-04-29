@@ -7,6 +7,7 @@ import struct
 import sys
 
 from tkinter import *
+from tkinter import font
 
 WIDGET_PADDING = 3
 
@@ -28,9 +29,16 @@ class App:
 		self.scrllOutput = Scrollbar(parent, orient=VERTICAL)
 		self.scrllOutput.grid(row=2, column=3, sticky=N+S+W)
 
-		self.lstOutput = Listbox(parent, font=('Courier', 8), yscrollcommand=self.scrllOutput.set, width=132, height=40)
-		self.lstOutput.grid(row=2, column=0, columnspan=4, sticky=N+S+E+W)
+		self.lstOutput = Listbox(parent, font=('Terminus', 8), selectmode=SINGLE, yscrollcommand=self.scrllOutput.set, width=132, height=40)
+		self.lstOutput.grid(row=2, column=0, columnspan=3, sticky=N+S+E+W)
+		self.lstInfo = []
+
 		self.scrllOutput.config(command=self.lstOutput.yview)
+
+		parent.bind("<Up>", self.previous_error)
+		self.lstOutput.bind("<Up>", self.previous_error)
+		parent.bind("<Down>", self.next_error)
+		self.lstOutput.bind("<Down>", self.next_error)
 
 		self.lstOutput.bind("<<ListboxSelect>>", self.edit)
 
@@ -47,13 +55,23 @@ class App:
 			return
 		self.lstOutput.insert(END, NewText)
 		if NewText.find("warning:") >= 0:
-			self.warning_count += 1;
+			self.warning_count += 1
 			self.lstOutput.itemconfig(END, {'bg' : 'yellow'})
+			self.lstInfo.append("W")
+		elif NewText.find("error:") >= 0:
+			self.error_count += 1
+			self.lstOutput.itemconfig(END, {'bg' : 'red'})
+			self.lstInfo.append("E")
+		else:
+			self.lstInfo.append(" ")
 		self.lstOutput.see(END)
 
 
 	def clearOutput(self):
 		self.lstOutput.delete(0, END)
+		self.warning_count = 0
+		self.error_count = 0
+		self.lstInfo = []
 
 
 	def clean(self):
@@ -127,6 +145,50 @@ class App:
 			self.child.kill()
 			self.child = None
 
+	def previous_error(self, event):
+		lstOutput = self.lstOutput
+		selection = lstOutput.curselection()
+		if selection:
+			index = selection[0]
+		else:
+			index = lstOutput.size()-1
+		prev_index = index
+		index -= 1
+		while index >= 0:
+			if self.lstInfo[index] != " ":
+				break
+			index -= 1
+		else:
+			index = prev_index
+		print(index)
+		lstOutput.select_clear(0, END)
+		lstOutput.select_set(index)
+		lstOutput.activate(index)
+		return "break"
+
+	def next_error(self, event):
+		lstOutput = self.lstOutput
+		selection = lstOutput.curselection()
+		if selection:
+			index = selection[0]
+		else:
+			index = 0
+		max_index = lstOutput.size()
+		prev_index = index
+		index += 1
+		while index < max_index:
+			if self.lstInfo[index] != " ":
+				break
+			index += 1
+		else:
+			index = prev_index
+		print(index)
+		lstOutput.select_clear(0, END)
+		lstOutput.select_set(index)
+		lstOutput.activate(index)
+		return "break"
+
+
 	def edit(self, event):
 		selection = event.widget.curselection()
 		if selection:
@@ -145,6 +207,10 @@ def main():
 	global root
 
 	root = Tk()
+	for family in font.families():
+		f = font.Font(family=family)
+		if f.metrics("fixed"):
+			print(family)
 	root.protocol("WM_DELETE_WINDOW", Exit)
 	root.title("build shell")
 
@@ -152,13 +218,3 @@ def main():
 
 	root.mainloop()
 
-
-
-if __name__ == "__main__":
-	try:
-		main()
-	except KeyboardInterrupt:
-		print("\nScript terminated via Ctrl-C")
-	except Exception as err:
-		print(str(err))
-		input("Press 'Enter' to close script")

@@ -1,5 +1,7 @@
-import build_shell.main as shell
-
+try:
+	import build_shell.main as shell
+except ImportError:
+	import main as shell
 
 if __name__ == "__main__":
 	try:
