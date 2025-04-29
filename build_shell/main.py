@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 
-
-import subprocess
 import os
-import struct
 import sys
 
 from tkinter import *
@@ -39,6 +36,7 @@ class App:
 		self.lstOutput.bind("<Up>", self.previous_error)
 		parent.bind("<Down>", self.next_error)
 		self.lstOutput.bind("<Down>", self.next_error)
+		self.lstOutput.bind("<Return>", self.edit)
 
 		self.lstOutput.bind("<<ListboxSelect>>", self.edit)
 
@@ -48,22 +46,30 @@ class App:
 		self.frame = parent
 		parent.after_idle(self.launch)
 
-	
-	def Output(self, NewText):
-		if NewText.startswith('[ninja '):
-			self.status.config(text=NewText)
-			return
+
+	def output_warning(self, NewText):
 		self.lstOutput.insert(END, NewText)
-		if NewText.find("warning:") >= 0:
-			self.warning_count += 1
-			self.lstOutput.itemconfig(END, {'bg' : 'yellow'})
-			self.lstInfo.append("W")
-		elif NewText.find("error:") >= 0:
-			self.error_count += 1
-			self.lstOutput.itemconfig(END, {'bg' : 'red'})
-			self.lstInfo.append("E")
-		else:
-			self.lstInfo.append(" ")
+		self.warning_count += 1
+		self.lstOutput.itemconfig(END, {'bg' : 'yellow'})
+		self.lstInfo.append("W")
+		self.lstOutput.see(END)
+
+
+	def output_error(self, NewText):
+		self.lstOutput.insert(END, NewText)
+		self.error_count += 1
+		self.lstOutput.itemconfig(END, {'bg' : 'red'})
+		self.lstInfo.append("E")
+		self.lstOutput.see(END)
+
+
+	def output_status(self, NewText):
+		self.status.config(text=NewText)
+
+
+	def output_text(self, NewText):
+		self.lstOutput.insert(END, NewText)
+		self.lstInfo.append(" ")
 		self.lstOutput.see(END)
 
 
@@ -77,7 +83,7 @@ class App:
 	def clean(self):
 		self.kill()
 		self.clearOutput()
-		self.launch(extra=["clean"])
+		self.launch(clean=True)
 
 
 	def build(self):
@@ -86,64 +92,49 @@ class App:
 		self.launch()
 
 
-	def launch(self, extra=[]):
-		env = os.environ
-		env["NINJA_STATUS"] = "[ninja %f/%t] "
-#	args = ["meson", "compile", "-C", "build"]
-		args = ["ninja", "-C", "build"]
-		args += extra
+	def find_build_type(self, root_dir=None):
+		if root_dir is None:
+			root_dir = os.getcwd()
+		files = os.listdir(root_dir)
+		if "Cargo.toml" in files:
+			import cargo
+			return cargo.Builder(root_dir)
+		if "build.ninja" in files:
+			import ninja
+			return ninja.Builder(root_dir)
+		if "makefile" in files:
+			import make
+			return  make.Builder(root_dir)
+		for f in files:
+			new_root = os.path.join(root_dir, f)
+			if os.is_dir(new_root):
+				return self.find_build_type(new_root)
+		return None
 
-		child = subprocess.Popen(args, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0) #pylint: disable = consider-using-with
-		os.set_blocking(child.stdout.fileno(), False)
 
-		self.child = child
-		self.leftover_data = b""
-		self.warning_count = 0;
-		self.error_count = 0;
-		self.frame.after(500, self.check)
-
-
-	def get_child_output(self):
-		if self.child:
-			data = self.child.stdout.read()
-			if data:
-				data = self.leftover_data + data
-			else:
-				data = self.leftover_data
-				exitcode = self.child.poll()
-				if exitcode is not None:
-					data += b'\n Child terminated\n'
-					self.child = None
-		else:
-			data = self.leftover_data
-			if len(data) > 0 and not data.endswith(b'\n'):
-				data += b'\n'
-
-		while True:
-			idx = data.find(b'\n')
-			if idx >= 0:
-				line = data[:idx]
-				data = data[idx+1:]
-
-				line = line.decode("utf-8").rstrip()
-				if len(line) > 0:
-					self.Output(line)
-			else:
-				break
-		self.leftover_data = data
+	def launch(self, clean=False):
+		builder = self.find_build_type()
+		
+		if builder:
+			builder.launch(clean)
+			self.builder = builder
+			self.warning_count = 0;
+			self.error_count = 0;
+			self.frame.after(500, self.check)
 
 
 	def check(self):
-		self.get_child_output()
-		
-		if self.child or len(self.leftover_data) > 0:
+		if self.builder:
+			more = self.builder.get_output(self)
+		if more:
 			self.frame.after(10, self.check)
 
 
 	def kill(self):
-		if self.child:
-			self.child.kill()
-			self.child = None
+		if self.builder:
+			self.builder.kill()
+			self.builder = None
+
 
 	def previous_error(self, event):
 		lstOutput = self.lstOutput
@@ -160,11 +151,11 @@ class App:
 			index -= 1
 		else:
 			index = prev_index
-		print(index)
 		lstOutput.select_clear(0, END)
 		lstOutput.select_set(index)
 		lstOutput.activate(index)
 		return "break"
+
 
 	def next_error(self, event):
 		lstOutput = self.lstOutput
@@ -182,7 +173,6 @@ class App:
 			index += 1
 		else:
 			index = prev_index
-		print(index)
 		lstOutput.select_clear(0, END)
 		lstOutput.select_set(index)
 		lstOutput.activate(index)
@@ -194,9 +184,8 @@ class App:
 		if selection:
 			index = selection[0]
 			data = event.widget.get(index)
-			# Data format is file:line:column xxx
-			parts = data.split(":")
-			print(parts)
+			filename, line_num = self.builder.get_location(data)
+			print(filename, line_num)
 
 def Exit():
 	root.destroy()
