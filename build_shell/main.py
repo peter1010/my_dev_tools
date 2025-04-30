@@ -14,6 +14,8 @@ import sys
 from tkinter import *
 from tkinter import font
 
+import editor
+
 WIDGET_PADDING = 3
 
 class App:
@@ -34,7 +36,7 @@ class App:
 			return  make.Builder(root_dir)
 		if "default.gpj" in files:
 			import ghs
-			return  make.Builder(root_dir)
+			return  ghs.Builder(root_dir)
 		for f in files:
 			new_root = os.path.join(root_dir, f)
 			if os.path.isdir(new_root):
@@ -55,14 +57,17 @@ class App:
 		btn = Button(parent, text="Rebuild", command=self.build)
 		btn.grid(row=0, column=1)
 
-		btn = Button(parent, text="Exit", command=Exit)
+		btn = Button(parent, text="Stop", command=self.stop)
 		btn.grid(row=0, column=2)
 
+		btn = Button(parent, text="Exit", command=Exit)
+		btn.grid(row=0, column=3)
+
 		self.scrllOutput = Scrollbar(parent, orient=VERTICAL)
-		self.scrllOutput.grid(row=2, column=3, sticky=N+S+W)
+		self.scrllOutput.grid(row=2, column=4, sticky=N+S+W)
 
 		self.lstOutput = Listbox(parent, font=('Terminus', 8), selectmode=SINGLE, yscrollcommand=self.scrllOutput.set, width=132, height=40)
-		self.lstOutput.grid(row=2, column=0, columnspan=3, sticky=N+S+E+W)
+		self.lstOutput.grid(row=2, column=0, columnspan=4, sticky=N+S+E+W)
 		self.lstInfo = []
 
 		self.scrllOutput.config(command=self.lstOutput.yview)
@@ -126,7 +131,9 @@ class App:
 		self.clearOutput()
 		self.launch()
 
-
+	def stop(self):
+		if self.builder:
+			self.builder.kill()
 
 	def launch(self, clean=False):
 		builder = self.find_build_type()
@@ -138,11 +145,15 @@ class App:
 			self.warning_count = 0;
 			self.error_count = 0;
 			self.frame.after(500, self.check)
-
+		else:
+			self.builder = None
+			self.output_text("-- NO BUILDER FOUND --")
 
 	def check(self):
 		if self.builder:
 			more = self.builder.get_output(self)
+		else:
+			more = false
 		if more:
 			self.frame.after(10, self.check)
 
@@ -171,6 +182,7 @@ class App:
 		lstOutput.select_clear(0, END)
 		lstOutput.select_set(index)
 		lstOutput.activate(index)
+		self.lstOutput.see(index)
 		return "break"
 
 
@@ -193,16 +205,19 @@ class App:
 		lstOutput.select_clear(0, END)
 		lstOutput.select_set(index)
 		lstOutput.activate(index)
+		self.lstOutput.see(index)
 		return "break"
 
 
 	def edit(self, event):
-		selection = event.widget.curselection()
+		lstOutput = self.lstOutput
+		selection = lstOutput.curselection()
+		print(selection)
 		if selection:
 			index = selection[0]
 			data = event.widget.get(index)
 			filename, line_num = self.builder.get_location(data)
-			print(filename, line_num)
+			editor.spawn(filename, line_num)
 
 def Exit():
 	root.destroy()
