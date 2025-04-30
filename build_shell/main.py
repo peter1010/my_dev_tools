@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+#
+# TKtinter application that creates a shell to capture build output, it parses the output for warnings (which are shown in yellow)
+# and errors (which are shown oin red)
+# Clicking on the error opens vim
+# The app tries to find either a cargo, ninja, makefile or greenhills build file in the current directory or sub directories and
+# if found runs that build and captures the output.
+#
+
 import os
 import sys
 
@@ -9,6 +17,33 @@ from tkinter import font
 WIDGET_PADDING = 3
 
 class App:
+
+	# Update if necessary with any new build types...
+	def find_build_type(self, root_dir=None):
+		if root_dir is None:
+			root_dir = os.getcwd()
+		files = os.listdir(root_dir)
+		if "Cargo.toml" in files:
+			import cargo
+			return cargo.Builder(root_dir)
+		if "build.ninja" in files:
+			import ninja
+			return ninja.Builder(root_dir)
+		if "makefile" in files:
+			import make
+			return  make.Builder(root_dir)
+		if "default.gpj" in files:
+			import ghs
+			return  make.Builder(root_dir)
+		for f in files:
+			new_root = os.path.join(root_dir, f)
+			if os.path.isdir(new_root):
+				builder = self.find_build_type(new_root)
+				if builder:
+					return builder
+		return None
+
+
 	def __init__(self, parent):
 		
 		# Set the minimum width & height
@@ -91,27 +126,6 @@ class App:
 		self.clearOutput()
 		self.launch()
 
-
-	def find_build_type(self, root_dir=None):
-		if root_dir is None:
-			root_dir = os.getcwd()
-		files = os.listdir(root_dir)
-		if "Cargo.toml" in files:
-			import cargo
-			return cargo.Builder(root_dir)
-		if "build.ninja" in files:
-			import ninja
-			return ninja.Builder(root_dir)
-		if "makefile" in files:
-			import make
-			return  make.Builder(root_dir)
-		for f in files:
-			new_root = os.path.join(root_dir, f)
-			if os.path.isdir(new_root):
-				builder = self.find_build_type(new_root)
-				if builder:
-					return builder
-		return None
 
 
 	def launch(self, clean=False):
