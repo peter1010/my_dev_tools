@@ -71,8 +71,9 @@ class App:
 
 		self.scrllOutput = tk.Scrollbar(parent, orient=tk.VERTICAL)
 		self.scrllOutput.grid(row=2, column=4, sticky=tk.N+tk.S+tk.W)
-
-		self.lstOutput = tk.Listbox(parent, font=('Terminus', 8), selectmode=tk.SINGLE, yscrollcommand=self.scrllOutput.set, width=132, height=40)
+		fixed_font = font.nametofont("TkFixedFont")
+		fixed_font.configure(size=-8)
+		self.lstOutput = tk.Listbox(parent, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=self.scrllOutput.set, width=132, height=40)
 		self.lstOutput.grid(row=2, column=0, columnspan=4, sticky=tk.N+tk.S+tk.E+tk.W)
 		self.lstInfo = []
 
@@ -139,7 +140,7 @@ class App:
 	def output_warning(self, NewText):
 		self.lstOutput.insert(tk.END, NewText)
 		self.warning_count += 1
-		self.lstOutput.itemconfig(END, {'bg' : 'yellow'})
+		self.lstOutput.itemconfig(tk.END, {'bg' : 'yellow'})
 		self.lstInfo.append("W")
 		self.lstOutput.see(tk.END)
 
@@ -281,10 +282,17 @@ def main():
 	global root
 
 	root = tk.Tk()
+
+#	family = font.Font(font='TkFixedFont')["family"]
+
+#	print(family)
+#	return
+
+#	print(font.names())
 	for family in font.families():
 		f = font.Font(family=family)
 		if f.metrics("fixed"):
-			print(family)
+			print(family, f.measure("Help"))
 
 	app = App(root)
 
