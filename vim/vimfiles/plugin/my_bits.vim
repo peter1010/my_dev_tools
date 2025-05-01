@@ -32,14 +32,6 @@ let s:path = fnamemodify(resolve(expand('<sfile>:p')), ":h:h") . '/pythonx'
 
 " echom "path is " . s:path
 
-"& in from of a option means treat the option as a variable
-"This means the option is set to the evaluation of the expression
-let &makeprg = 'python "' . s:path . '/build.py" %:p'
-
-" -> "filename", line y:x E:comment
-set efm=\"%f\"\\,\ line\ %l:%c\ %t:%m
-
-
 function! Gtag()
     execute 'pythonx import sys'
     execute 'pythonx sys.argv = [r"' . s:path . '/gtags.py", "b"]'
