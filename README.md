@@ -1,5 +1,22 @@
 # My Dev Tools
 
+## build_shell
+
+### Summary
+
+A Tkinter application that is a wrapper around calling make, cargo, ninja or ghs. It captures the output, parses it and highlights
+warnings in yellow and error is red. Selecting a hightlighted line will open vim to edit the code associated with the warning.
+
+### Run
+
+Run the code from within your build environment like so...
+
+> python /path/build_shell
+
+where path is the path to the build_shell folder.
+
+It will search for a "makefile", "Cargo.toml", "ninja.build" or "default.gpj"
+
 ## Vim config
 
 Since I have to use both Microsoft Windows & Linux and want to use the same VIM settings,
@@ -26,11 +43,4 @@ Copy all files in the repo vimfiles folder into the .vim folder in Home.
 
 A gtags.conf file
 
-## build_shell
-
-### Build and install
-
-To run the package...
-
-python -m build_shell
 
