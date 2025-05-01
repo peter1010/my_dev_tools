@@ -52,29 +52,44 @@ class App:
 		parent.protocol("WM_DELETE_WINDOW", self.on_quit)
 		parent.title("build shell")
 		# Set the minimum width & height
-		parent.minsize(600, 400)
+#		parent.minsize(600, 400)
 		root.option_add('*tearOff', False)
 
-		self.create_menubar(parent)
+		menubar = self.create_menubar(parent)
+		menubar.grid(row=0, column=0, sticky=tk.N+tk.W)
 
-		btn = tk.Button(parent, text="Clean", command=self.on_clean)
-		btn.grid(row=0, column=0)
+#		btn = tk.Button(parent, text="Clean", command=self.on_clean)
+#		btn.grid(row=0, column=0)
 
-		btn = tk.Button(parent, text="Rebuild", command=self.on_build)
-		btn.grid(row=0, column=1)
+#		btn = tk.Button(parent, text="Rebuild", command=self.on_build)
+#		btn.grid(row=0, column=1)
 
-		btn = tk.Button(parent, text="Stop", command=self.on_stop)
-		btn.grid(row=0, column=2)
+#		btn = tk.Button(parent, text="Stop", command=self.on_stop)
+#		btn.grid(row=0, column=2)
 
-		btn = tk.Button(parent, text="Exit", command=self.on_quit)
-		btn.grid(row=0, column=3)
+#		btn = tk.Button(parent, text="Exit", command=self.on_quit)
+#		btn.grid(row=0, column=3)
 
-		self.scrllOutput = tk.Scrollbar(parent, orient=tk.VERTICAL)
-		self.scrllOutput.grid(row=2, column=4, sticky=tk.N+tk.S+tk.W)
+		frame = self.create_panel(parent)
+		frame.grid(row=1, column=0)
+#		frame.grid(row=2, columnspan=4)
+
+		self.status = tk.Label(parent, text="")
+		self.status.grid(row=2, column=0, columnspan=4, sticky=tk.N+tk.S+tk.E+tk.W)
+
+		self.parent = parent
+		parent.after_idle(self.launch)
+
+
+	def create_panel(self, parent):
+		frame = tk.Frame(parent)
+
+		self.scrllOutput = tk.Scrollbar(frame, orient=tk.VERTICAL)
+		self.scrllOutput.grid(row=0, column=1, sticky=tk.N+tk.S+tk.W)
 		fixed_font = font.nametofont("TkFixedFont")
-		fixed_font.configure(size=-8)
-		self.lstOutput = tk.Listbox(parent, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=self.scrllOutput.set, width=132, height=40)
-		self.lstOutput.grid(row=2, column=0, columnspan=4, sticky=tk.N+tk.S+tk.E+tk.W)
+		fixed_font.configure(size=10)
+		self.lstOutput = tk.Listbox(frame, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=self.scrllOutput.set, width=132, height=40)
+		self.lstOutput.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
 		self.lstInfo = []
 
 		self.scrllOutput.config(command=self.lstOutput.yview)
@@ -86,54 +101,38 @@ class App:
 		self.lstOutput.bind("<Return>", self.edit)
 
 		self.lstOutput.bind("<<ListboxSelect>>", self.edit)
+		return frame
 
-		self.status = tk.Label(parent, text="")
-		self.status.grid(row=1, column=0, columnspan=4, sticky=tk.N+tk.S+tk.E+tk.W)
-
-		self.parent = parent
-		parent.after_idle(self.launch)
 
 	def create_menubar(self, parent):
-#        menubar = tk.Frame(parent, bd=1, relief=tk.RAISED)
-#		menubar.grid(row=0, column=0)		
-#        file_btn = tk.Menubutton(menubar, text='File')
+		menubar = tk.Frame(parent, bd=1, relief=tk.RAISED)
 
-#        menu_file = tk.Menu(file_btn, tearoff=False)
-#        menu_file.add_command(label='save', command=lambda: log('save'))
-#        menu_file.add_command(label='open', command=lambda: log('open'))
-#        file_btn.config(menu=menu_file)
-#        file_btn.pack(side=tk.LEFT)
-#        master.bind('f', lambda e: file_btn.event_generate('<<Invoke>>'))
+		filemenu_btn = tk.Menubutton(menubar, text='File', underline=0)
+		menu_file = tk.Menu(filemenu_btn, tearoff=False)
+		menu_file.add_command(label='Quit', underline=0, accelerator="Ctrl+Q", command=self.on_quit)
+		filemenu_btn.config(menu=menu_file)
+		filemenu_btn.pack(side=tk.LEFT)
+		parent.bind('f', lambda e: filemenu_btn.event_generate('<<Invoke>>'))
+		parent.bind('<Control-q>', self.on_quit)
 
-#        edit_btn = tk.Menubutton(self, text='Edit')
-#        menu_edit = tk.Menu(edit_btn, tearoff=False)
-#        menu_edit.add_command(label='add', command=lambda: log('add'))
-#        menu_edit.add_command(label='remove', command=lambda: log('remove'))
-#        edit_btn.config(menu=menu_edit)
-#        edit_btn.pack(side=tk.LEFT)
-#        master.bind('e', lambda e: edit_btn.event_generate('<<Invoke>>'))
+		buildmenu_btn = tk.Menubutton(menubar, text='Build', underline=0)
+		menu_build = tk.Menu(buildmenu_btn, tearoff=False)
+		menu_build.add_command(label="Build", underline=0, command=self.on_build)
+		menu_build.add_command(label="Clean", underline=0, command=self.on_clean)
+		menu_build.add_command(label="Stop", underline=0, command=self.on_stop)
+		buildmenu_btn.config(menu=menu_build)
+		buildmenu_btn.pack(side=tk.LEFT)
+		parent.bind('b', lambda e: buildmenu_btn.event_generate('<<Invoke>>'))
 
-		menubar = tk.Menu(parent)
-		root['menu'] = menubar
-		self.menubar = menubar
+		helpmenu_btn = tk.Menubutton(menubar, text='Help', underline=0)
+		menu_help = tk.Menu(helpmenu_btn, tearoff=False)
+		menu_help.add_command(label='About', underline=0)
+		helpmenu_btn.config(menu=menu_help)
+		helpmenu_btn.pack(side=tk.LEFT)
+		parent.bind('h', lambda e: helpmenu_btn.event_generate('<<Invoke>>'))
+		return menubar
 
-		filemenu = tk.Menu(menubar)
-		# filemenu.add_command(label="Open folder", command=self.on_open)
-		filemenu.add_command(label="Quit", underline=0, command=self.on_quit)
-		menubar.add_cascade(menu=filemenu, label="File", underline=0)
-		self.filemenu = filemenu
 
-		debugmenu = tk.Menu(menubar)
-		debugmenu.add_command(label="Build", underline=0, command=self.on_build)
-		debugmenu.add_command(label="Clean", underline=0, command=self.on_clean)
-		debugmenu.add_command(label="Stop", underline=0, command=self.on_stop)
-		menubar.add_cascade(menu=debugmenu, label="Build")
-
-		parent.bind('<Key-f>', self.open_filemenu)
-		#toolsmenu = tk.Menu(menubar)
-		#toolsmenu.add_command(label="GDB Config", command=self.on_gdb)
-		#menubar.add_cascade(menu=toolsmenu, label="Tools")
-	
 	def open_filemenu(self, event):
 		self.menubar.postcascade(0)
 
@@ -185,7 +184,7 @@ class App:
 		if self.builder:
 			self.builder.kill()
 
-	def on_quit(self):
+	def on_quit(self, event=None):
 		if messagebox.askokcancel("Quit", "Do you want to quit?"):
 			self.parent.destroy()
 
