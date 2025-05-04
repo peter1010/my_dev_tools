@@ -1,8 +1,13 @@
 import subprocess
 import os
+import platform
+
+import tkinter as tk
+
+import config
 
 def get_vim():
-	return os.path.join("C:\\", "Program Files", "Vim", "vim91", "gvim.exe")
+	return config.get_configuration().get_editor_path()
 
 def spawn(filename, lineNum):
 		args = [get_vim(), "--remote-silent", "+" + str(lineNum), filename]
@@ -23,4 +28,36 @@ def spawn(filename, lineNum):
 #		proc = subprocess.Popen(args, creationflags=CREATE_NEW_CONSOLE, close_fds=True)
 #		time.sleep(1)
 
+class ConfigDialog:
 
+	def __init__(self, parent):
+		dialog = tk.Toplevel(parent)
+		dialog.title("Configure Editor")
+		self.entry = tk.Entry(dialog)
+		self.entry.pack()
+		ok_btn = tk.Button(dialog, text="Ok", underline=0, command=self.ok)
+		ok_btn.pack(side=tk.LEFT)
+
+		cancel_btn = tk.Button(dialog, text="Cancel", underline=0, command=self.cancel)
+		cancel_btn.pack(side=tk.LEFT)
+
+        # Modal window.
+        # Wait for visibility or grab_set doesn't seem to work.
+		dialog.wait_visibility()   # <<< NOTE
+		dialog.grab_set()          # <<< NOTE
+		dialog.transient(parent)   # <<< NOTE
+
+		self.dialog = dialog
+
+		cfg = config.get_configuration()
+		print(cfg.get_editor_path())
+
+
+	def ok(self):
+#        self.data = self.entry.get()
+		self.dialog.grab_release()      # <<< NOTE
+		self.dialog.destroy()
+
+	def cancel(self):
+		self.dialog.grab_release()      # <<< NOTE
+		self.dialog.destroy()

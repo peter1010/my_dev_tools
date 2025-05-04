@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 #
-# TKtinter application that creates a shell to capture build output, it parses the output for warnings (which are shown in yellow)
-# and errors (which are shown oin red)
+# TKinter application that creates a shell to capture build output, it parses the output for warnings (which are shown in yellow)
+# and errors (which are shown in red)
 # Clicking on the error opens vim
 # The app tries to find either a cargo, ninja, makefile or greenhills build file in the current directory or sub directories and
 # if found runs that build and captures the output.
@@ -72,7 +72,6 @@ class App:
 
 		frame = self.create_panel(parent)
 		frame.pack(fill=tk.BOTH, expand=True)
-#		frame.grid(row=2, columnspan=4)
 
 		self.status = tk.Label(parent, text="")
 		self.status.pack(side=tk.BOTTOM, fill=tk.X)
@@ -102,9 +101,9 @@ class App:
 		self.lstOutput.bind("<Up>", self.previous_error)
 		parent.bind("<Down>", self.next_error)
 		self.lstOutput.bind("<Down>", self.next_error)
-		self.lstOutput.bind("<Return>", self.edit)
+		self.lstOutput.bind("<Return>", self.on_edit)
 
-		self.lstOutput.bind("<<ListboxSelect>>", self.edit)
+		self.lstOutput.bind("<<ListboxSelect>>", self.on_edit)
 		return frame
 
 
@@ -112,28 +111,39 @@ class App:
 		menubar = tk.Frame(parent, bd=1, relief=tk.RAISED)
 
 		filemenu_btn = tk.Menubutton(menubar, text='File', underline=0)
-		menu_file = tk.Menu(filemenu_btn, tearoff=False)
-		menu_file.add_command(label='Quit', underline=0, accelerator="Ctrl+Q", command=self.on_quit)
-		filemenu_btn.config(menu=menu_file)
+		filemenu = tk.Menu(filemenu_btn, tearoff=False)
+		filemenu.add_command(label='Quit', underline=0, accelerator="Ctrl+Q", command=self.on_quit)
+		filemenu_btn.config(menu=filemenu)
 		filemenu_btn.pack(side=tk.LEFT)
-		parent.bind('f', lambda e: filemenu_btn.event_generate('<<Invoke>>'))
+		parent.bind('f', lambda evt: filemenu_btn.event_generate('<<Invoke>>'))
 		parent.bind('<Control-q>', self.on_quit)
 
 		buildmenu_btn = tk.Menubutton(menubar, text='Build', underline=0)
-		menu_build = tk.Menu(buildmenu_btn, tearoff=False)
-		menu_build.add_command(label="Build", underline=0, command=self.on_build)
-		menu_build.add_command(label="Clean", underline=0, command=self.on_clean)
-		menu_build.add_command(label="Stop", underline=0, command=self.on_stop)
-		buildmenu_btn.config(menu=menu_build)
+		buildmenu = tk.Menu(buildmenu_btn, tearoff=False)
+		buildmenu.add_command(label="Build", underline=0, accelerator="Ctrl+B", command=self.on_build)
+		buildmenu.add_command(label="Clean", underline=0, accelerator="Ctrl+L", command=self.on_clean)
+		buildmenu.add_command(label="Stop", underline=0, accelerator="Ctrl+S", command=self.on_stop)
+		buildmenu_btn.config(menu=buildmenu)
 		buildmenu_btn.pack(side=tk.LEFT)
-		parent.bind('b', lambda e: buildmenu_btn.event_generate('<<Invoke>>'))
+		parent.bind('b', lambda evt: buildmenu_btn.event_generate('<<Invoke>>'))
+		parent.bind('c', lambda evt: buildmenu_btn.event_generate('<<Invoke>>'))
+		parent.bind('s', lambda evt: buildmenu_btn.event_generate('<<Invoke>>'))
+		parent.bind('<Control-b>', self.on_build)
+		parent.bind('<Control-l>', self.on_clean)
+		parent.bind('<Control-s>', self.on_stop)
 
+		toolmenu_btn = tk.Menubutton(menubar, text='Tools', underline=0)
+		toolmenu = tk.Menu(toolmenu_btn, tearoff=False)
+		toolmenu.add_command(label="Editor", underline=0, command=self.on_editor)
+		toolmenu_btn.config(menu=toolmenu)
+		toolmenu_btn.pack(side=tk.LEFT)
+	
 		helpmenu_btn = tk.Menubutton(menubar, text='Help', underline=0)
-		menu_help = tk.Menu(helpmenu_btn, tearoff=False)
-		menu_help.add_command(label='About', underline=0)
-		helpmenu_btn.config(menu=menu_help)
+		helpmenu = tk.Menu(helpmenu_btn, tearoff=False)
+		helpmenu.add_command(label='About', underline=0)
+		helpmenu_btn.config(menu=helpmenu)
 		helpmenu_btn.pack(side=tk.LEFT)
-		parent.bind('h', lambda e: helpmenu_btn.event_generate('<<Invoke>>'))
+		parent.bind('h', lambda evt: helpmenu_btn.event_generate('<<Invoke>>'))
 		return menubar
 
 
@@ -173,18 +183,18 @@ class App:
 		self.lstInfo = []
 
 
-	def on_clean(self):
+	def on_clean(self, event=None):
 		self.kill()
 		self.clearOutput()
 		self.launch(clean=True)
 
 
-	def on_build(self):
+	def on_build(self, event=None):
 		self.kill()
 		self.clearOutput()
 		self.launch()
 
-	def on_stop(self):
+	def on_stop(self, event=None):
 		if self.builder:
 			self.builder.kill()
 
@@ -266,7 +276,7 @@ class App:
 		return "break"
 
 
-	def edit(self, event):
+	def on_edit(self, event):
 		lstOutput = self.lstOutput
 		selection = lstOutput.curselection()
 		print(selection)
@@ -275,6 +285,9 @@ class App:
 			data = event.widget.get(index)
 			filename, line_num = self.builder.get_location(data)
 			editor.spawn(filename, line_num)
+
+	def on_editor(self, event=None):
+		editor.ConfigDialog(self.parent)
 
 def Exit():
 	root.destroy()
