@@ -56,7 +56,7 @@ class App:
 		root.option_add('*tearOff', False)
 
 		menubar = self.create_menubar(parent)
-		menubar.grid(row=0, column=0, sticky=tk.N+tk.W)
+		menubar.pack(side=tk.TOP, fill=tk.X)
 
 #		btn = tk.Button(parent, text="Clean", command=self.on_clean)
 #		btn.grid(row=0, column=0)
@@ -71,11 +71,11 @@ class App:
 #		btn.grid(row=0, column=3)
 
 		frame = self.create_panel(parent)
-		frame.grid(row=1, column=0)
+		frame.pack(fill=tk.BOTH, expand=True)
 #		frame.grid(row=2, columnspan=4)
 
 		self.status = tk.Label(parent, text="")
-		self.status.grid(row=2, column=0, columnspan=4, sticky=tk.N+tk.S+tk.E+tk.W)
+		self.status.pack(side=tk.BOTTOM, fill=tk.X)
 
 		self.parent = parent
 		parent.after_idle(self.launch)
@@ -85,11 +85,15 @@ class App:
 		frame = tk.Frame(parent)
 
 		self.scrllOutput = tk.Scrollbar(frame, orient=tk.VERTICAL)
-		self.scrllOutput.grid(row=0, column=1, sticky=tk.N+tk.S+tk.W)
+		self.scrllOutput.pack(side=tk.RIGHT, fill=tk.Y)
+
 		fixed_font = font.nametofont("TkFixedFont")
 		fixed_font.configure(size=10)
-		self.lstOutput = tk.Listbox(frame, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=self.scrllOutput.set, width=132, height=40)
-		self.lstOutput.grid(row=0, column=0, sticky=tk.N+tk.S+tk.E+tk.W)
+		self.lstOutput = tk.Listbox(frame, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=self.scrllOutput.set,
+			height=30
+		)
+
+		self.lstOutput.pack(expand=True, fill="both", side=tk.LEFT)
 		self.lstInfo = []
 
 		self.scrllOutput.config(command=self.lstOutput.yview)
