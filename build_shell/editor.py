@@ -33,6 +33,8 @@ class ConfigDialog:
 	def __init__(self, parent):
 		dialog = tk.Toplevel(parent)
 		dialog.title("Configure Editor")
+		# Set _NET_WM_WINDOW_TYPE_DIALOG, Sway uses this to know to float the window
+		dialog.attributes('-type', 'dialog')
 		self.entry = tk.Entry(dialog)
 		self.entry.pack()
 		ok_btn = tk.Button(dialog, text="Ok", underline=0, command=self.ok)
