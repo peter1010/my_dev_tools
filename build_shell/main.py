@@ -55,23 +55,9 @@ class App:
 #		parent.minsize(600, 400)
 		root.option_add('*tearOff', False)
 
-		menubar = self.create_menubar(parent)
-		menubar.pack(side=tk.TOP, fill=tk.X)
+		self.create_menubar(parent).pack(fill=tk.BOTH)
 
-#		btn = tk.Button(parent, text="Clean", command=self.on_clean)
-#		btn.grid(row=0, column=0)
-
-#		btn = tk.Button(parent, text="Rebuild", command=self.on_build)
-#		btn.grid(row=0, column=1)
-
-#		btn = tk.Button(parent, text="Stop", command=self.on_stop)
-#		btn.grid(row=0, column=2)
-
-#		btn = tk.Button(parent, text="Exit", command=self.on_quit)
-#		btn.grid(row=0, column=3)
-
-		frame = self.create_panel(parent)
-		frame.pack(fill=tk.BOTH, expand=True)
+		self.create_panel(parent).pack(fill=tk.BOTH, expand=True)
 
 		self.status = tk.Label(parent, text="")
 		self.status.pack(side=tk.BOTTOM, fill=tk.X)
@@ -83,19 +69,19 @@ class App:
 	def create_panel(self, parent):
 		frame = tk.Frame(parent)
 
-		self.scrllOutput = tk.Scrollbar(frame, orient=tk.VERTICAL)
-		self.scrllOutput.pack(side=tk.RIGHT, fill=tk.Y)
+		scrllOutput = tk.Scrollbar(frame, orient=tk.VERTICAL)
+		scrllOutput.pack(side=tk.RIGHT, fill=tk.Y)
 
 		fixed_font = font.nametofont("TkFixedFont")
 		fixed_font.configure(size=10)
-		self.lstOutput = tk.Listbox(frame, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=self.scrllOutput.set,
+		self.lstOutput = tk.Listbox(frame, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=scrllOutput.set,
 			height=30
 		)
 
 		self.lstOutput.pack(expand=True, fill="both", side=tk.LEFT)
 		self.lstInfo = []
 
-		self.scrllOutput.config(command=self.lstOutput.yview)
+		scrllOutput.config(command=self.lstOutput.yview)
 
 		parent.bind("<Up>", self.previous_error)
 		self.lstOutput.bind("<Up>", self.previous_error)
@@ -126,8 +112,6 @@ class App:
 		buildmenu_btn.config(menu=buildmenu)
 		buildmenu_btn.pack(side=tk.LEFT)
 		parent.bind('b', lambda evt: buildmenu_btn.event_generate('<<Invoke>>'))
-		parent.bind('c', lambda evt: buildmenu_btn.event_generate('<<Invoke>>'))
-		parent.bind('s', lambda evt: buildmenu_btn.event_generate('<<Invoke>>'))
 		parent.bind('<Control-b>', self.on_build)
 		parent.bind('<Control-l>', self.on_clean)
 		parent.bind('<Control-s>', self.on_stop)
@@ -137,6 +121,7 @@ class App:
 		toolmenu.add_command(label="Editor", underline=0, command=self.on_editor)
 		toolmenu_btn.config(menu=toolmenu)
 		toolmenu_btn.pack(side=tk.LEFT)
+		parent.bind('t', lambda evt: toolmenu_btn.event_generate('<<Invoke>>'))
 	
 		helpmenu_btn = tk.Menubutton(menubar, text='Help', underline=0)
 		helpmenu = tk.Menu(helpmenu_btn, tearoff=False)

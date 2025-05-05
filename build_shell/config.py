@@ -25,17 +25,34 @@ class Config:
 			os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
 		self.config_object.write(open(self.config_file, 'w'))
 
-	def get_editor_path(self):
+
+	def get_editor_details(self):
 		try:
 			editor_path = self.config_object['Editor']['path']
+			editor_args = self.config_object['Editor']['args']
 		except KeyError:
 			if platform.system() == 'Linux':
 				editor_path = os.getenv('EDITOR', '/usr/bin/vim')
-		else:
-			raise RuntimeError("Support for %s is TODO" % system)
-		self.config_object['Editor'] = { 'path' : editor_path, 'args' : '' }
+			else:
+				raise RuntimeError("Support for %s is TODO" % system)
+			editor_args = ''
+		self.config_object['Editor'] = { 'path' : editor_path, 'args' : editor_args }
 		self.save()
-		return editor_path
+		return editor_path, editor_args
+
+
+	def set_editor_details(self, new_path, new_args):
+		try:
+			prev_path = self.config_object['Editor']['path']
+			prev_args = self.config_object['Editor']['args']
+		except KeyError:
+			prev_path = None
+			prev_args = None
+
+		if prev_path != new_path or prev_args != new_args:
+			self.config_object['Editor'] = {'path' : new_path, 'args' : new_args}
+			self.save()
+		return
 
 
 def get_configuration():
