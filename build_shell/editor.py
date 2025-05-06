@@ -33,48 +33,74 @@ def spawn(filename, lineNum):
 class ConfigDialog:
 
 	def __init__(self, parent):
-		path, args = config.get_configuration().get_editor_details()
-		editor_path = tk.StringVar()
-		editor_args = tk.StringVar()
-		editor_path.set(path)
-		editor_args.set(args)
-
 		dialog = tk.Toplevel(parent)
 		dialog.title("Configure Editor")
-		self.inform_wm_dialog(dialog)
+		inform_wm_dialog(dialog)
 
 		tk.Label(dialog, text="Path:").grid(row=0, column=0)
-		tk.Entry(dialog, textvariable=editor_path).grid(row=0, column=1)
-		
+		self.path = tk.Entry(dialog)
+		self.path.grid(row=0, column=1)
 		tk.Button(dialog, text="Choose", command=self.on_choose).grid(row=0, column=2)
 
 		tk.Label(dialog, text="Args:").grid(row=1, column=0)
-		tk.Entry(dialog, textvariable=editor_args).grid(row=1, column=1)
+		self.args = tk.Listbox(dialog, height=10)
+		self.args.grid(row=1, column=1)
 		
+		path, args = config.get_configuration().get_editor_details()
+		self.path.insert(tk.END, path)
+		for arg in args:
+			self.args.insert(tk.END, arg)
 
-		tk.Button(dialog, text="Ok", underline=0, command=self.on_ok).grid(row=2, column=0)
+		tk.Button(dialog, text="Ok", underline=0, command=self.on_ok).grid(row=3, column=0)
 
 		cancel_btn = tk.Button(dialog, text="Cancel", underline=0, command=self.cancel)
-		cancel_btn.grid(row=2, column=1)
+		cancel_btn.grid(row=3, column=1)
 
-        # Modal window.
-        # Wait for visibility or grab_set doesn't seem to work.
+		# Modal window.
+		# Wait for visibility or grab_set doesn't seem to work.
 		dialog.wait_visibility()   # <<< NOTE
 		dialog.grab_set()          # <<< NOTE
 		dialog.transient(parent)   # <<< NOTE
 
 		self.dialog = dialog
-		self.editor_path = editor_path
-		self.editor_args = editor_args
+		self.args.bind("<Double-1>", self.on_click_edit_arg)
+		self.args.bind("<Return>", self.on_key_edit_arg)
 
-	def inform_wm_dialog(self, root):
-		wm = root._windowingsystem
-		if wm == "aqua":
-			root.tk.call("::tk::unsupported::MacWindowStyle", "style", root, "moveableModal", "")
-		elif wm == "x11":
-			# Set _NET_WM_WINDOW_TYPE_DIALOG, Sway uses this to know to float the window
-			# root.attributes('-type', 'dialog')
-			root.wm_attributes(type="dialog")
+	def on_click_edit_arg(self, event):
+		index = self.args.index(f"@{event.x},{event.y}")
+		self.on_start_edit_arg(index)
+		return "break"
+
+	def on_key_edit_arg(self, event):
+		index = self.args.curselection()
+		self.on_start_edit_arg(index)
+		return "break"
+
+	def on_start_edit_arg(self, index):
+		self.edit_arg_index = index
+		text = self.args.get(index)
+		y0 = self.args.bbox(index)[1]
+		entry = tk.Entry(self.args, borderwidth=0, highlightthickness=1)
+		entry.bind("<Return>", self.on_accept_edit_arg)
+		entry.bind("<Escape>", self.on_cancel_edit_arg)
+
+		entry.insert(0, text)
+		entry.selection_from(0)
+		entry.selection_to("end")
+		entry.place(relx=0, y=y0, relwidth=1, width=-1)
+		entry.focus_set()
+		entry.wait_visibility()   # <<< NOTE
+		entry.grab_set()
+
+	def on_cancel_edit_arg(self, event):
+		event.widget.destroy()
+		self.dialog.grab_set()          # <<< NOTE
+
+	def on_accept_edit_arg(self, event):
+		new_data = event.widget.get()
+		self.args.delete(self.edit_arg_index)
+		self.args.insert(self.edit_arg_index, new_data)
+		event.widget.destroy()
 
 	def on_choose(self):
 		#filedialog.FileDialog(self.dialog).go()
@@ -82,8 +108,8 @@ class ConfigDialog:
 
 
 	def on_ok(self):
-		editor_path = self.editor_path.get()
-		editor_args = self.editor_args.get()
+		editor_path = self.path.get()
+		editor_args = self.args.get()
 		if not os.path.exists(editor_path):
 			messagebox.showerror(message="Invalid Path")
 			return
@@ -95,3 +121,14 @@ class ConfigDialog:
 	def cancel(self):
 		self.dialog.grab_release()      # <<< NOTE
 		self.dialog.destroy()
+
+def inform_wm_dialog(root):
+	wm = root._windowingsystem
+	if wm == "aqua":
+		root.tk.call("::tk::unsupported::MacWindowStyle", "style", root, "moveableModal", "")
+	elif wm == "x11":
+		# Set _NET_WM_WINDOW_TYPE_DIALOG, Sway uses this to know to float the window
+		root.wm_attributes('-type', 'dialog')
+		# for py >= 3.13 this will work! root.wm_attributes(type="dialog")
+
+
