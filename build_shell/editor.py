@@ -41,8 +41,7 @@ class ConfigDialog:
 
 		dialog = tk.Toplevel(parent)
 		dialog.title("Configure Editor")
-		# Set _NET_WM_WINDOW_TYPE_DIALOG, Sway uses this to know to float the window
-		dialog.attributes('-type', 'dialog')
+		self.inform_wm_dialog(dialog)
 
 		tk.Label(dialog, text="Path:").grid(row=0, column=0)
 		tk.Entry(dialog, textvariable=editor_path).grid(row=0, column=1)
@@ -68,6 +67,14 @@ class ConfigDialog:
 		self.editor_path = editor_path
 		self.editor_args = editor_args
 
+	def inform_wm_dialog(self, root):
+		wm = root._windowingsystem
+		if wm == "aqua":
+			root.tk.call("::tk::unsupported::MacWindowStyle", "style", root, "moveableModal", "")
+		elif wm == "x11":
+			# Set _NET_WM_WINDOW_TYPE_DIALOG, Sway uses this to know to float the window
+			# root.attributes('-type', 'dialog')
+			root.wm_attributes(type="dialog")
 
 	def on_choose(self):
 		#filedialog.FileDialog(self.dialog).go()

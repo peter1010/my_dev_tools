@@ -12,6 +12,12 @@ class Config:
 			if config_dir is None:
 				config_dir = os.path.join(os.getenv('HOME'), '.config')
 			config_file = os.path.join(config_dir, 'dev_tools', 'build_shell.ini')
+		elif system == 'Windows':
+			config_dir = os.getenv('APPDATA', None)
+			print(config_dir)
+			if config_dir is None:
+				config_dir = os.path.join(os.getenv('HOME'), 'AppData', 'Local')
+			config_file = os.path.join(config_dir, 'dev_tools', 'build_shell.ini')
 		else:
 			raise RuntimeError("Support for %s is TODO" % system)
 		config_object = ConfigParser()
@@ -31,8 +37,11 @@ class Config:
 			editor_path = self.config_object['Editor']['path']
 			editor_args = self.config_object['Editor']['args']
 		except KeyError:
-			if platform.system() == 'Linux':
+			system = platform.system()
+			if system == 'Linux':
 				editor_path = os.getenv('EDITOR', '/usr/bin/vim')
+			elif system == 'Windows':
+				editor_path = self.find_gvim_on_windows()
 			else:
 				raise RuntimeError("Support for %s is TODO" % system)
 			editor_args = ''
@@ -53,6 +62,26 @@ class Config:
 			self.config_object['Editor'] = {'path' : new_path, 'args' : new_args}
 			self.save()
 		return
+
+	def find_gvim_on_windows(self):
+		import winreg
+		# Check registry, local user first, then globally
+		install_path = None
+		for hive in [winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE]:
+			print(hive)
+			try:
+				key = winreg.OpenKey(hive, "Software\\Vim\\Gvim")
+				data = winreg.QueryValueEx(key, "path")
+				if data[1] == 1:
+					install_path = data[0]
+				print(install_path)
+				winreg.CloseKey(key)
+				break
+			except OSError:
+				pass
+
+		return install_path
+
 
 
 def get_configuration():
