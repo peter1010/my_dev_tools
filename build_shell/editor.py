@@ -9,13 +9,27 @@ from tkinter import ttk
 
 import config
 
-def get_vim():
-	return config.get_configuration().get_editor_path()
 
-def spawn(filename, lineNum):
-		args = [get_vim(), "--remote-silent", "+" + str(lineNum), filename]
+def substitute(args, filename, line_num):
+	table = (
+		("{fname}", filename),
+		("{line}", line_num)
+	)
+	new_args = []
+	for arg in args:
+		for name, value in table:
+			idx = arg.find(name)
+			if idx >= 0:
+				arg = arg[:idx] + str(value) + arg[idx+len(name):]
+		new_args.append(arg)
+	return new_args
+
+
+def spawn(filename, line_num, working_dir):
+		execute, args =  config.get_configuration().get_editor_details()
+		args = [execute] + substitute(args, filename, line_num)
 		print(args)
-		proc = subprocess.Popen(args, start_new_session=True, close_fds=True)
+		proc = subprocess.Popen(args, cwd=working_dir, start_new_session=True, close_fds=True)
 
 #		try:
 #			pid = os.fork()

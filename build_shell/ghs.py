@@ -55,4 +55,4 @@ class Builder(Base):
 			print("%s contains invalid line number" % subparts[0])
 			return None, None
 		filename = parts[0][1:-1]
-		return filename, line_num
+		return filename, line_num, self.build_dir

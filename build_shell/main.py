@@ -76,7 +76,7 @@ class App:
 		fixed_font = font.nametofont("TkFixedFont")
 		fixed_font.configure(size=10)
 		self.output_pane = tk.Listbox(frame, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=scroll_bar.set,
-			height=30
+			height=30, width=132
 		)
 
 		self.output_pane.pack(expand=True, fill="both", side=tk.LEFT)
@@ -179,7 +179,7 @@ class App:
 
 
 	def on_stop(self, event=None):
-		self.builder.kill_builder()
+		self.kill_builder()
 
 
 	def on_quit(self, event=None):
@@ -206,7 +206,7 @@ class App:
 		if self.builder:
 			more = self.builder.get_output(self)
 		else:
-			more = false
+			more = False
 		if more:
 			self.parent.after(10, self.check_builder)
 
@@ -214,7 +214,6 @@ class App:
 	def kill_builder(self):
 		if self.builder:
 			self.builder.kill()
-			self.builder = None
 
 
 	def on_previous_error(self, event):
@@ -267,8 +266,8 @@ class App:
 		if selection and self.builder:
 			index = selection[0]
 			data = event.widget.get(index)
-			filename, line_num = self.builder.get_location(data)
-			editor.spawn(filename, line_num)
+			filename, line_num, working_dir = self.builder.get_location(data)
+			editor.spawn(filename, line_num, working_dir)
 
 	def on_editor(self, event=None):
 		editor.ConfigDialog(self.parent)

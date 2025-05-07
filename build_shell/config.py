@@ -33,6 +33,7 @@ class Config:
 
 
 	def get_editor_details(self):
+		update = False
 		try:
 			editor_path = self.config_object['Editor']['path']
 			flatten_args = self.config_object['Editor']['args']
@@ -41,12 +42,15 @@ class Config:
 			system = platform.system()
 			if system == 'Linux':
 				editor_path = os.getenv('EDITOR', '/usr/bin/vim')
-				editor_args = ["+%l", "%f"]
 			elif system == 'Windows':
 				editor_path = self.find_gvim_on_windows()
-				editor_args = ["+%l", "%f"]
 			else:
 				raise RuntimeError("Support for %s is TODO" % system)
+			update = True
+		if len(editor_args) == 0:
+			editor_args = ["+{line}", "--remote-silent", "{fname}"]
+			update = True
+		if update:
 			self.set_editor_details(editor_path, editor_args)
 		return editor_path, editor_args
 
@@ -60,7 +64,7 @@ class Config:
 			prev_path = None
 			prev_flatten_args = None
 
-		if prev_path != new_path or prev_args != new_args:
+		if prev_path != new_path or prev_flatten_args != flatten_args:
 			self.config_object['Editor'] = {'path' : new_path, 'args' : flatten_args}
 			self.save()
 		return

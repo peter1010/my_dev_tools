@@ -46,4 +46,4 @@ class Builder(Base):
 		except ValueError:
 			return None, None
 		filename = parts[0].strip()[3:]
-		return filename, line_num
+		return filename, line_num, self.build_dir
