@@ -14,6 +14,7 @@ import sys
 import tkinter as tk
 from tkinter import font
 from tkinter import messagebox
+from tkinter import ttk
 
 import editor
 
@@ -69,86 +70,83 @@ class App:
 	def create_panel(self, parent):
 		frame = tk.Frame(parent)
 
-		scrllOutput = tk.Scrollbar(frame, orient=tk.VERTICAL)
-		scrllOutput.pack(side=tk.RIGHT, fill=tk.Y)
+		scroll_bar = ttk.Scrollbar(frame, orient=tk.VERTICAL)
+		scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
 
 		fixed_font = font.nametofont("TkFixedFont")
 		fixed_font.configure(size=10)
-		self.lstOutput = tk.Listbox(frame, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=scrllOutput.set,
+		self.output_pane = tk.Listbox(frame, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=scroll_bar.set,
 			height=30
 		)
 
-		self.lstOutput.pack(expand=True, fill="both", side=tk.LEFT)
-		self.lstInfo = []
+		self.output_pane.pack(expand=True, fill="both", side=tk.LEFT)
+		self.output_info = []
 
-		scrllOutput.config(command=self.lstOutput.yview)
+		scroll_bar.config(command=self.output_pane.yview)
 
-		parent.bind("<Up>", self.previous_error)
-		self.lstOutput.bind("<Up>", self.previous_error)
-		parent.bind("<Down>", self.next_error)
-		self.lstOutput.bind("<Down>", self.next_error)
-		self.lstOutput.bind("<Return>", self.on_edit)
+		parent.bind("<Up>", self.on_previous_error)
+		self.output_pane.bind("<Up>", self.on_previous_error)
+		parent.bind("<Down>", self.on_next_error)
+		self.output_pane.bind("<Down>", self.on_next_error)
+		self.output_pane.bind("<Return>", self.on_edit)
 
-		self.lstOutput.bind("<<ListboxSelect>>", self.on_edit)
+		self.output_pane.bind("<<ListboxSelect>>", self.on_edit)
 		return frame
 
 
 	def create_menubar(self, parent):
 		menubar = tk.Frame(parent, bd=1, relief=tk.RAISED)
 
-		filemenu_btn = tk.Menubutton(menubar, text='File', underline=0)
-		filemenu = tk.Menu(filemenu_btn, tearoff=False)
-		filemenu.add_command(label='Quit', underline=0, accelerator="Ctrl+Q", command=self.on_quit)
-		filemenu_btn.config(menu=filemenu)
-		filemenu_btn.pack(side=tk.LEFT)
-		parent.bind('f', lambda evt: filemenu_btn.event_generate('<<Invoke>>'))
+		file_menu_btn = tk.Menubutton(menubar, text='File', underline=0)
+		file_menu = tk.Menu(file_menu_btn)
+		file_menu.add_command(label='Quit', underline=0, accelerator="Ctrl+Q", command=self.on_quit)
+		file_menu_btn.config(menu=file_menu)
+		file_menu_btn.pack(side=tk.LEFT)
+		parent.bind('f', lambda evt: file_menu_btn.event_generate('<<Invoke>>'))
 		parent.bind('<Control-q>', self.on_quit)
 
-		buildmenu_btn = tk.Menubutton(menubar, text='Build', underline=0)
-		buildmenu = tk.Menu(buildmenu_btn, tearoff=False)
-		buildmenu.add_command(label="Build", underline=0, accelerator="Ctrl+B", command=self.on_build)
-		buildmenu.add_command(label="Clean", underline=0, accelerator="Ctrl+L", command=self.on_clean)
-		buildmenu.add_command(label="Stop", underline=0, accelerator="Ctrl+S", command=self.on_stop)
-		buildmenu_btn.config(menu=buildmenu)
-		buildmenu_btn.pack(side=tk.LEFT)
-		parent.bind('b', lambda evt: buildmenu_btn.event_generate('<<Invoke>>'))
+		build_menu_btn = tk.Menubutton(menubar, text='Build', underline=0)
+		build_menu = tk.Menu(build_menu_btn)
+		build_menu.add_command(label="Build", underline=0, accelerator="Ctrl+B", command=self.on_build)
+		build_menu.add_command(label="Clean", underline=0, accelerator="Ctrl+L", command=self.on_clean)
+		build_menu.add_command(label="Stop", underline=0, accelerator="Ctrl+S", command=self.on_stop)
+		build_menu_btn.config(menu=build_menu)
+		build_menu_btn.pack(side=tk.LEFT)
+		parent.bind('b', lambda evt: build_menu_btn.event_generate('<<Invoke>>'))
 		parent.bind('<Control-b>', self.on_build)
 		parent.bind('<Control-l>', self.on_clean)
 		parent.bind('<Control-s>', self.on_stop)
 
-		toolmenu_btn = tk.Menubutton(menubar, text='Tools', underline=0)
-		toolmenu = tk.Menu(toolmenu_btn, tearoff=False)
-		toolmenu.add_command(label="Editor", underline=0, command=self.on_editor)
-		toolmenu_btn.config(menu=toolmenu)
-		toolmenu_btn.pack(side=tk.LEFT)
-		parent.bind('t', lambda evt: toolmenu_btn.event_generate('<<Invoke>>'))
+		tool_menu_btn = tk.Menubutton(menubar, text='Tools', underline=0)
+		tool_menu = tk.Menu(tool_menu_btn)
+		tool_menu.add_command(label="Editor", underline=0, command=self.on_editor)
+		tool_menu_btn.config(menu=tool_menu)
+		tool_menu_btn.pack(side=tk.LEFT)
+		parent.bind('t', lambda evt: tool_menu_btn.event_generate('<<Invoke>>'))
 	
-		helpmenu_btn = tk.Menubutton(menubar, text='Help', underline=0)
-		helpmenu = tk.Menu(helpmenu_btn, tearoff=False)
-		helpmenu.add_command(label='About', underline=0)
-		helpmenu_btn.config(menu=helpmenu)
-		helpmenu_btn.pack(side=tk.LEFT)
-		parent.bind('h', lambda evt: helpmenu_btn.event_generate('<<Invoke>>'))
+		help_menu_btn = tk.Menubutton(menubar, text='Help', underline=0)
+		help_menu = tk.Menu(help_menu_btn)
+		help_menu.add_command(label='About', underline=0)
+		help_menu_btn.config(menu=help_menu)
+		help_menu_btn.pack(side=tk.LEFT)
+		parent.bind('h', lambda evt: help_menu_btn.event_generate('<<Invoke>>'))
 		return menubar
 
 
-	def open_filemenu(self, event):
-		self.menubar.postcascade(0)
-
 	def output_warning(self, NewText):
-		self.lstOutput.insert(tk.END, NewText)
+		self.output_pane.insert(tk.END, NewText)
 		self.warning_count += 1
-		self.lstOutput.itemconfig(tk.END, {'bg' : 'yellow'})
-		self.lstInfo.append("W")
-		self.lstOutput.see(tk.END)
+		self.output_pane.itemconfig(tk.END, {'bg' : 'yellow'})
+		self.output_info.append("W")
+		self.output_pane.see(tk.END)
 
 
 	def output_error(self, NewText):
-		self.lstOutput.insert(tk.END, NewText)
+		self.output_pane.insert(tk.END, NewText)
 		self.error_count += 1
-		self.lstOutput.itemconfig(tk.END, {'bg' : 'red'})
-		self.lstInfo.append("E")
-		self.lstOutput.see(tk.END)
+		self.output_pane.itemconfig(tk.END, {'bg' : 'red'})
+		self.output_info.append("E")
+		self.output_pane.see(tk.END)
 
 
 	def output_status(self, NewText):
@@ -156,36 +154,38 @@ class App:
 
 
 	def output_text(self, NewText):
-		self.lstOutput.insert(tk.END, NewText)
-		self.lstInfo.append(" ")
-		self.lstOutput.see(tk.END)
+		self.output_pane.insert(tk.END, NewText)
+		self.output_info.append(" ")
+		self.output_pane.see(tk.END)
 
 
-	def clearOutput(self):
-		self.lstOutput.delete(0, tk.END)
+	def clr_output_pane(self):
+		self.output_pane.delete(0, tk.END)
 		self.warning_count = 0
 		self.error_count = 0
-		self.lstInfo = []
+		self.output_info = []
 
 
 	def on_clean(self, event=None):
-		self.kill()
-		self.clearOutput()
+		self.kill_builder()
+		self.clr_output_pane()
 		self.launch(clean=True)
 
 
 	def on_build(self, event=None):
-		self.kill()
-		self.clearOutput()
+		self.kill_builder()
+		self.clr_output_pane()
 		self.launch()
 
+
 	def on_stop(self, event=None):
-		if self.builder:
-			self.builder.kill()
+		self.builder.kill_builder()
+
 
 	def on_quit(self, event=None):
 		if messagebox.askokcancel("Quit", "Do you want to quit?"):
 			self.parent.destroy()
+
 
 	def launch(self, clean=False):
 		builder = self.find_build_type()
@@ -196,75 +196,74 @@ class App:
 			self.builder = builder
 			self.warning_count = 0;
 			self.error_count = 0;
-			self.parent.after(500, self.check)
+			self.parent.after(500, self.check_builder)
 		else:
 			self.builder = None
 			self.output_text("-- NO BUILDER FOUND --")
 
-	def check(self):
+
+	def check_builder(self):
 		if self.builder:
 			more = self.builder.get_output(self)
 		else:
 			more = false
 		if more:
-			self.parent.after(10, self.check)
+			self.parent.after(10, self.check_builder)
 
 
-	def kill(self):
+	def kill_builder(self):
 		if self.builder:
 			self.builder.kill()
 			self.builder = None
 
 
-	def previous_error(self, event):
-		lstOutput = self.lstOutput
-		selection = lstOutput.curselection()
+	def on_previous_error(self, event):
+		output_pane = self.output_pane
+		selection = output_pane.curselection()
 		if selection:
 			index = selection[0]
 		else:
-			index = lstOutput.size()-1
+			index = output_pane.size()-1
 		prev_index = index
 		index -= 1
 		while index >= 0:
-			if self.lstInfo[index] != " ":
+			if self.output_info[index] != " ":
 				break
 			index -= 1
 		else:
 			index = prev_index
-		lstOutput.select_clear(0, tk.END)
-		lstOutput.select_set(index)
-		lstOutput.activate(index)
-		self.lstOutput.see(index)
+		output_pane.select_clear(0, tk.END)
+		output_pane.select_set(index)
+		output_pane.activate(index)
+		output_pane.see(index)
 		return "break"
 
 
-	def next_error(self, event):
-		lstOutput = self.lstOutput
-		selection = lstOutput.curselection()
+	def on_next_error(self, event):
+		output_pane = self.output_pane
+		selection = output_pane.curselection()
 		if selection:
 			index = selection[0]
 		else:
 			index = 0
-		max_index = lstOutput.size()
+		max_index = output_pane.size()
 		prev_index = index
 		index += 1
 		while index < max_index:
-			if self.lstInfo[index] != " ":
+			if self.output_info[index] != " ":
 				break
 			index += 1
 		else:
 			index = prev_index
-		lstOutput.select_clear(0, tk.END)
-		lstOutput.select_set(index)
-		lstOutput.activate(index)
-		self.lstOutput.see(index)
+		output_pane.select_clear(0, tk.END)
+		output_pane.select_set(index)
+		output_pane.activate(index)
+		output_pane.see(index)
 		return "break"
 
 
 	def on_edit(self, event):
-		lstOutput = self.lstOutput
-		selection = lstOutput.curselection()
-		print(selection)
+		selection = self.output_pane.curselection()
 		if selection and self.builder:
 			index = selection[0]
 			data = event.widget.get(index)
@@ -273,10 +272,6 @@ class App:
 
 	def on_editor(self, event=None):
 		editor.ConfigDialog(self.parent)
-
-def Exit():
-	root.destroy()
-	sys.exit()
 
 
 def main():
@@ -296,6 +291,5 @@ def main():
 			print(family, f.measure("Help"))
 
 	app = App(root)
-
 	root.mainloop()
 
