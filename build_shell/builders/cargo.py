@@ -45,5 +45,8 @@ class Builder(Base):
 			line_num = int(parts[1])
 		except ValueError:
 			return None, None, None
-		filename = parts[0].strip()[3:]
+		filename = parts[0].strip()
+		if not filename.startswith("-->"):
+			return None, None, None
+		filename = filename[3:].strip()
 		return filename, line_num, self.build_dir
