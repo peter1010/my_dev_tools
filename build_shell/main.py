@@ -119,7 +119,7 @@ class App:
 
 		tool_menu_btn = tk.Menubutton(menubar, text='Tools', underline=0)
 		tool_menu = tk.Menu(tool_menu_btn)
-		tool_menu.add_command(label="Editor", underline=0, command=self.on_editor)
+		tool_menu.add_command(label="Editor...", underline=0, command=self.on_editor)
 		tool_menu_btn.config(menu=tool_menu)
 		tool_menu_btn.pack(side=tk.LEFT)
 		parent.bind('t', lambda evt: tool_menu_btn.event_generate('<<Invoke>>'))

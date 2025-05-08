@@ -10,10 +10,10 @@ import sys
 import tkinter as tk
 from tkinter import font
 from tkinter import messagebox
+from tkinter import filedialog
+from tkinter import ttk
 
 #import editor
-
-WIDGET_PADDING = 3
 
 class App:
 
@@ -41,43 +41,46 @@ class App:
 	def create_panel(self, parent):
 		frame = tk.Frame(parent)
 
-		self.scrllOutput = tk.Scrollbar(frame, orient=tk.VERTICAL)
-		self.scrllOutput.pack(side=tk.RIGHT, fill=tk.Y)
+		scroll_bar = tk.Scrollbar(frame, orient=tk.VERTICAL)
+		scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
 
 		fixed_font = font.nametofont("TkFixedFont")
 		fixed_font.configure(size=10)
-		self.lstOutput = tk.Listbox(frame, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=self.scrllOutput.set,
+		code_view = tk.Listbox(frame, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=scroll_bar.set,
 			height=30
 		)
 
-		self.lstOutput.pack(expand=True, fill="both", side=tk.LEFT)
-		self.lstInfo = []
+		code_view.pack(expand=True, fill="both", side=tk.LEFT)
 
-		self.scrllOutput.config(command=self.lstOutput.yview)
+		scroll_bar.config(command=code_view.yview)
+		self.code_view = code_view
 		return frame
 
 
 	def create_menubar(self, parent):
 		menubar = tk.Frame(parent, bd=1, relief=tk.RAISED)
 
-		filemenu_btn = tk.Menubutton(menubar, text='File', underline=0)
-		menu_file = tk.Menu(filemenu_btn, tearoff=False)
-		menu_file.add_command(label='Quit', underline=0, accelerator="Ctrl+Q", command=self.on_quit)
-		filemenu_btn.config(menu=menu_file)
-		filemenu_btn.pack(side=tk.LEFT)
-		parent.bind('f', lambda e: filemenu_btn.event_generate('<<Invoke>>'))
-		parent.bind('<Control-q>', self.on_quit)
+		file_menu_btn = tk.Menubutton(menubar, text='File', underline=0)
+		file_menu = tk.Menu(file_menu_btn)
+		file_menu.add_command(label='Open File...', underline=0, accelerator="Ctrl+O", command=self.on_open)
+		file_menu.add_command(label='Quit', underline=0, accelerator="Ctrl+Q", command=self.on_quit)
+		file_menu_btn.config(menu=file_menu)
+		file_menu_btn.pack(side=tk.LEFT)
 
-		viewmenu_btn = tk.Menubutton(menubar, text='View', underline=0)
-		menu_view = tk.Menu(viewmenu_btn, tearoff=False)
-		menu_view.add_command(label="Foward", underline=0)
-		menu_view.add_command(label="Backwards", underline=0)
-		menu_view.add_command(label="Edit", underline=0)
-		viewmenu_btn.config(menu=menu_view)
-		viewmenu_btn.pack(side=tk.LEFT)
-		parent.bind('f', lambda evt: viewmenu_btn.event_generate('<<Invoke>>'))
-		parent.bind('b', lambda evt: viewmenu_btn.event_generate('<<Invoke>>'))
-		parent.bind('e', lambda evt: viewmenu_btn.event_generate('<<Invoke>>'))
+		parent.bind('f', lambda evt: file_menu_btn.event_generate('<<Invoke>>'))
+		parent.bind('<Control-q>', self.on_quit)
+		parent.bind('<Control-o>', self.on_open)
+
+		view_menu_btn = tk.Menubutton(menubar, text='View', underline=0)
+		view_menu = tk.Menu(view_menu_btn)
+		view_menu.add_command(label="Foward", underline=0)
+		view_menu.add_command(label="Backwards", underline=0)
+		view_menu.add_command(label="Edit", underline=0)
+		view_menu_btn.config(menu=view_menu)
+		view_menu_btn.pack(side=tk.LEFT)
+		parent.bind('f', lambda evt: view_menu_btn.event_generate('<<Invoke>>'))
+		parent.bind('b', lambda evt: view_menu_btn.event_generate('<<Invoke>>'))
+		parent.bind('e', lambda evt: view_menu_btn.event_generate('<<Invoke>>'))
 
 		helpmenu_btn = tk.Menubutton(menubar, text='Help', underline=0)
 		menu_help = tk.Menu(helpmenu_btn, tearoff=False)
@@ -87,18 +90,20 @@ class App:
 		parent.bind('h', lambda evt: helpmenu_btn.event_generate('<<Invoke>>'))
 		return menubar
 
-	def open_filemenu(self, event):
-		self.menubar.postcascade(0)
-
-
-	def output_status(self, NewText):
-		self.status.config(text=NewText)
-
 	def on_clean(self):
 		self.kill()
 		self.clearOutput()
 		self.launch(clean=True)
 
+	def on_open(self, event=None):
+		file_path = filedialog.askopenfilename()
+		
+		print(file_path)
+		with open(file_path, "r") as in_fp:
+			for line in in_fp:
+				line = line.rstrip().expandtabs(4)
+				print(line)
+				self.code_view.insert(tk.END, line)
 
 	def on_quit(self, event=None):
 		if messagebox.askokcancel("Quit", "Do you want to quit?"):
@@ -142,10 +147,6 @@ class App:
 			data = event.widget.get(index)
 			filename, line_num = self.builder.get_location(data)
 			editor.spawn(filename, line_num)
-
-def Exit():
-	root.destroy()
-	sys.exit()
 
 
 def main():
