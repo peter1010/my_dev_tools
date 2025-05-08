@@ -43,16 +43,16 @@ class Builder(Base):
 
 
 	def get_location(self, line):
-		# "ParameterManager\GT8Common\CParMan.h", line 23: warning #64-D: declaration
+		# "example.h", line 23: warning #64-D: declaration
 		parts = line.split(",")
 		if len(parts) < 2:
 			print("No comma separator in %s" % line)
-			return None, None
+			return None, None, None
 		subparts = parts[1].split(":")
 		try:
 			line_num = int(subparts[0].strip()[5:])
 		except ValueError:
 			print("%s contains invalid line number" % subparts[0])
-			return None, None
+			return None, None, None
 		filename = parts[0][1:-1]
 		return filename, line_num, self.build_dir

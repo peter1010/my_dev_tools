@@ -28,16 +28,16 @@ class App:
 			root_dir = os.getcwd()
 		files = os.listdir(root_dir)
 		if "Cargo.toml" in files:
-			import cargo
+			import builders.cargo as cargo
 			return cargo.Builder(root_dir)
 		if "build.ninja" in files:
-			import ninja
+			import builders.ninja as ninja
 			return ninja.Builder(root_dir)
 		if "makefile" in files:
-			import make
+			import builders.make as make
 			return  make.Builder(root_dir)
 		if "default.gpj" in files:
-			import ghs
+			import builders.ghs as ghs
 			return  ghs.Builder(root_dir)
 		for f in files:
 			new_root = os.path.join(root_dir, f)

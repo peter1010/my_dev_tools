@@ -124,7 +124,8 @@ class ConfigDialog:
 
 	def on_ok(self):
 		editor_path = self.path.get()
-		editor_args = self.args.get()
+		editor_args = list(filter(lambda item: len(item) > 0, [x.strip() for x in self.args.get(0, tk.END)]))
+
 		if not os.path.exists(editor_path):
 			messagebox.showerror(message="Invalid Path")
 			return
