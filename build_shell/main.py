@@ -15,10 +15,9 @@ import tkinter as tk
 from tkinter import font
 from tkinter import messagebox
 from tkinter import ttk
+from tkinter import filedialog
 
 import editor
-
-WIDGET_PADDING = 3
 
 class App:
 
@@ -26,6 +25,7 @@ class App:
 	def find_build_type(self, root_dir=None):
 		if root_dir is None:
 			root_dir = os.getcwd()
+		self.parent.title("Build Shell for %s" % root_dir)
 		files = os.listdir(root_dir)
 		if "Cargo.toml" in files:
 			import builders.cargo as cargo
@@ -64,6 +64,7 @@ class App:
 		self.status.pack(side=tk.BOTTOM, fill=tk.X)
 
 		self.parent = parent
+		self.builder = None
 		parent.after_idle(self.launch)
 
 
@@ -99,6 +100,7 @@ class App:
 
 		file_menu_btn = tk.Menubutton(menubar, text='File', underline=0)
 		file_menu = tk.Menu(file_menu_btn)
+		file_menu.add_command(label='Browse for build..', underline=0, command=self.on_build_browse)
 		file_menu.add_command(label='Quit', underline=0, accelerator="Ctrl+Q", command=self.on_quit)
 		file_menu_btn.config(menu=file_menu)
 		file_menu_btn.pack(side=tk.LEFT)
@@ -126,7 +128,7 @@ class App:
 	
 		help_menu_btn = tk.Menubutton(menubar, text='Help', underline=0)
 		help_menu = tk.Menu(help_menu_btn)
-		help_menu.add_command(label='About', underline=0)
+		help_menu.add_command(label='About', underline=0, command=self.on_about)
 		help_menu_btn.config(menu=help_menu)
 		help_menu_btn.pack(side=tk.LEFT)
 		parent.bind('h', lambda evt: help_menu_btn.event_generate('<<Invoke>>'))
@@ -178,6 +180,23 @@ class App:
 		self.launch()
 
 
+	def on_about(self, event=None):
+		text = (
+			"Application to launch and capture the build output from ninja, cargo, make or ghs.",
+			"When launched the tool will look for build.ninja, cargo.toml, makefile or default.gpj in the current and subdirectories.",
+			"If found, a search for a matching executable in the standard install locations to execute.",
+			"The output is capture in the output pane"
+		)
+		messagebox.showinfo("About", "\n\n".join(text))
+
+
+	def on_build_browse(self, event=None):
+		root_dir = filedialog.askdirectory()
+		self.kill_builder()
+		self.clr_output_pane()
+		self.builder = None
+		self.launch(root_dir=root_dir)
+
 	def on_stop(self, event=None):
 		self.kill_builder()
 
@@ -187,18 +206,17 @@ class App:
 			self.parent.destroy()
 
 
-	def launch(self, clean=False):
-		builder = self.find_build_type()
+	def launch(self, clean=False, root_dir=None):
+		if not self.builder:
+			self.builder = self.find_build_type(root_dir)
 		
-		if builder:
-			self.output_text(str(builder))
-			builder.launch(clean)
-			self.builder = builder
+		if self.builder:
+			self.output_text(str(self.builder))
+			self.builder.launch(clean)
 			self.warning_count = 0;
 			self.error_count = 0;
 			self.parent.after(500, self.check_builder)
 		else:
-			self.builder = None
 			self.output_text("-- NO BUILDER FOUND --")
 
 
@@ -267,7 +285,9 @@ class App:
 			index = selection[0]
 			data = event.widget.get(index)
 			filename, line_num, working_dir = self.builder.get_location(data)
-			editor.spawn(filename, line_num, working_dir)
+			if filename and line_num and working_dir:
+				editor.spawn(filename, line_num, working_dir)
+
 
 	def on_editor(self, event=None):
 		editor.ConfigDialog(self.parent)
