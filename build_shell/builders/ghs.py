@@ -25,7 +25,7 @@ class Builder(Base):
 		args = [self.find_ghs(), "-top", "default.gpj"]
 		if clean:
 			args.append("-clean")
-		child = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0)
+		child = subprocess.Popen(args, cwd=self.build_dir, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0)
 		os.set_blocking(child.stdout.fileno(), False)
 
 		self.child = child
