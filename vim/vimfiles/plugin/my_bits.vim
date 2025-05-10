@@ -32,14 +32,6 @@ let s:path = fnamemodify(resolve(expand('<sfile>:p')), ":h:h") . '/pythonx'
 
 " echom "path is " . s:path
 
-function! Gtag()
-    execute 'pythonx import sys'
-    execute 'pythonx sys.argv = [r"' . s:path . '/gtags.py", "b"]'
-    execute 'pyxfile ' . s:path . '/gtags.py'
-endfunc
-
-command! GTAG call Gtag()
-
 function! LspGet(type)
     execute 'pythonx import sys'
     execute 'pythonx sys.argv = [r"' . s:path . '/lsp/client.py", r"' . a:type . '"]'

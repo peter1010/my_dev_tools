@@ -31,7 +31,7 @@ function! SkipCppCommentBlock(line)
         let s:in_comment_block = 1
     endif
     let length = len(a:line)
-    if a:line[length-2:length-1] == "/*"
+    if a:line[length-2:length-1] == "*/"
         let s:in_comment_block = 0
         return 1
     endif
