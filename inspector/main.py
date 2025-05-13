@@ -13,6 +13,8 @@ from tkinter import messagebox
 from tkinter import filedialog
 from tkinter import ttk
 
+import prettify
+
 #import editor
 
 class App:
@@ -41,18 +43,24 @@ class App:
 	def create_panel(self, parent):
 		frame = tk.Frame(parent)
 
-		scroll_bar = tk.Scrollbar(frame, orient=tk.VERTICAL)
-		scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
+		y_scroll_bar = tk.Scrollbar(frame, orient=tk.VERTICAL)
+		y_scroll_bar.pack(side=tk.RIGHT, fill=tk.Y)
+
+		x_scroll_bar = tk.Scrollbar(frame, orient=tk.HORIZONTAL)
+		x_scroll_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
 		fixed_font = font.nametofont("TkFixedFont")
 		fixed_font.configure(size=10)
-		code_view = tk.Listbox(frame, font=fixed_font, selectmode=tk.SINGLE, yscrollcommand=scroll_bar.set,
-			height=30
+		code_view = tk.Text(frame, font=fixed_font, yscrollcommand=y_scroll_bar.set,
+			xscrollcommand=x_scroll_bar.set, wrap=tk.NONE, height=30
 		)
 
 		code_view.pack(expand=True, fill="both", side=tk.LEFT)
 
-		scroll_bar.config(command=code_view.yview)
+		y_scroll_bar.config(command=code_view.yview)
+		x_scroll_bar.config(command=code_view.xview)
+
+		parent.bind('<Button-1>', self.on_button_click)
 		self.code_view = code_view
 		return frame
 
@@ -90,20 +98,28 @@ class App:
 		parent.bind('h', lambda evt: helpmenu_btn.event_generate('<<Invoke>>'))
 		return menubar
 
-	def on_clean(self):
-		self.kill()
-		self.clearOutput()
-		self.launch(clean=True)
-
 	def on_open(self, event=None):
 		file_path = filedialog.askopenfilename()
 		
+		formatter = prettify.TkFormatter(self.code_view)
+		self.code_view.config(state=tk.NORMAL)
+
 		print(file_path)
 		with open(file_path, "r") as in_fp:
+			lines = []
 			for line in in_fp:
 				line = line.rstrip().expandtabs(4)
-				print(line)
-				self.code_view.insert(tk.END, line)
+				lines.append(line)
+
+			formatter.insert('\n'.join(lines))
+				#print(line)
+				#self.code_view.insert(tk.END, line + '\n')
+		self.code_view.config(state=tk.DISABLED)
+
+
+	def on_button_click(self, event):
+		print("Button clicked")
+
 
 	def on_quit(self, event=None):
 		if messagebox.askokcancel("Quit", "Do you want to quit?"):
