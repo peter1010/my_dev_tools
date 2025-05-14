@@ -52,25 +52,24 @@ class ConfigDialog:
 		dialog.title("Configure Editor")
 		inform_wm_dialog(dialog)
 
-		tk.Label(dialog, text="Path:").grid(row=0, column=0)
-		self.path = tk.Entry(dialog)
-		self.path.grid(row=0, column=1)
-		tk.Button(dialog, text="Choose", command=self.on_choose).grid(row=0, column=2)
+		ttk.Label(dialog, text="Path:").grid(row=0, column=0)
+		self.path = tk.Entry(dialog, width=20)
+		self.path.grid(row=0, column=1, sticky=tk.W + tk.E)
+		ttk.Button(dialog, text="Choose", command=self.on_choose).grid(row=0, column=2)
 
-		tk.Label(dialog, text="Args:").grid(row=1, column=0)
+		ttk.Label(dialog, text="Args:").grid(row=1, column=0)
 		self.args = tk.Text(dialog, height=10, width=20)
-		self.args.grid(row=1, column=1)
+		self.args.grid(row=1, column=1, rowspan=3)
 
 		path, args = config.get_configuration().get_editor_details()
 		self.path.insert(tk.END, path)
 		for arg in args:
 			self.args.insert(tk.END, arg + '\n')
 
-		ttk.Button(dialog, text="Ok", underline=0, command=self.on_ok).grid(row=3, column=0)
+		ttk.Button(dialog, text="Ok", underline=0, command=self.on_ok).grid(row=2, column=2)
+		ttk.Button(dialog, text="Cancel", underline=0, command=self.on_cancel).grid(row=3, column=2)
 
-		cancel_btn = tk.Button(dialog, text="Cancel", underline=0, command=self.cancel)
-		cancel_btn.grid(row=3, column=1)
-
+		dialog.rowconfigure(1, weight=3)
 		# Modal window.
 		# Wait for visibility or grab_set doesn't seem to work.
 		dialog.wait_visibility()
@@ -81,7 +80,6 @@ class ConfigDialog:
 
 
 	def on_choose(self):
-		#filedialog.FileDialog(self.dialog).go()
 		filedialog.askopenfilename()
 
 
@@ -97,7 +95,7 @@ class ConfigDialog:
 		self.dialog.destroy()
 
 
-	def cancel(self):
+	def on_cancel(self):
 		self.dialog.grab_release()
 		self.dialog.destroy()
 
