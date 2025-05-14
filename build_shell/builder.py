@@ -17,8 +17,8 @@ class Builder:
 			else:
 				data = self.leftover_data
 				exitcode = self.child.poll()
-				if exitcode is not None:
-					data += b'\n Child terminated\n'
+				if (exitcode is not None) and (exitcode != 0):
+					data += b'\n-- Build terminated (%i) --\n' % exitcode
 					self.child = None
 		else:
 			data = self.leftover_data

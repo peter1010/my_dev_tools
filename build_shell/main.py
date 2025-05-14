@@ -65,7 +65,7 @@ class App:
 
 		self.parent = parent
 		self.builder = None
-		parent.after_idle(self.launch)
+		parent.after(100, self.launch)
 
 
 	def create_panel(self, parent):
