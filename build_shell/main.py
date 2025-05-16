@@ -19,6 +19,13 @@ from tkinter import filedialog
 
 import editor
 
+try:
+	from ctypes import windll
+	windll_loader = True
+except ImportError:
+	windll_loader = False
+
+
 class App:
 
 	# Update if necessary with any new build types...
@@ -297,6 +304,10 @@ def main():
 	global root
 
 	root = tk.Tk()
+
+	# Make tkinter aware of monitor DPI for fonts are crisp
+	if windll_loader:
+		windll.shcore.SetProcessDpiAwareness(True)
 
 #	family = font.Font(font='TkFixedFont')["family"]
 
