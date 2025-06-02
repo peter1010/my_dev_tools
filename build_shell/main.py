@@ -105,35 +105,37 @@ class App:
 	def create_menubar(self, parent):
 		menubar = tk.Frame(parent, bd=1, relief=tk.RAISED)
 
-		file_menu_btn = tk.Menubutton(menubar, text='File', underline=0)
+		file_menu_btn = ttk.Menubutton(menubar, text='File', underline=0)
 		file_menu = tk.Menu(file_menu_btn)
 		file_menu.add_command(label='Browse for build..', underline=0, command=self.on_build_browse)
 		file_menu.add_command(label='Quit', underline=0, accelerator="Ctrl+Q", command=self.on_quit)
 		file_menu_btn.config(menu=file_menu)
 		file_menu_btn.pack(side=tk.LEFT)
+
 		parent.bind('f', lambda evt: file_menu_btn.event_generate('<<Invoke>>'))
 		parent.bind('<Control-q>', self.on_quit)
 
-		build_menu_btn = tk.Menubutton(menubar, text='Build', underline=0)
+		build_menu_btn = ttk.Menubutton(menubar, text='Build', underline=0)
 		build_menu = tk.Menu(build_menu_btn)
 		build_menu.add_command(label="Build", underline=0, accelerator="Ctrl+B", command=self.on_build)
 		build_menu.add_command(label="Clean", underline=0, accelerator="Ctrl+L", command=self.on_clean)
 		build_menu.add_command(label="Stop", underline=0, accelerator="Ctrl+S", command=self.on_stop)
 		build_menu_btn.config(menu=build_menu)
 		build_menu_btn.pack(side=tk.LEFT)
+
 		parent.bind('b', lambda evt: build_menu_btn.event_generate('<<Invoke>>'))
 		parent.bind('<Control-b>', self.on_build)
 		parent.bind('<Control-l>', self.on_clean)
 		parent.bind('<Control-s>', self.on_stop)
 
-		tool_menu_btn = tk.Menubutton(menubar, text='Tools', underline=0)
+		tool_menu_btn = ttk.Menubutton(menubar, text='Tools', underline=0)
 		tool_menu = tk.Menu(tool_menu_btn)
 		tool_menu.add_command(label="Editor...", underline=0, command=self.on_editor)
 		tool_menu_btn.config(menu=tool_menu)
 		tool_menu_btn.pack(side=tk.LEFT)
 		parent.bind('t', lambda evt: tool_menu_btn.event_generate('<<Invoke>>'))
 	
-		help_menu_btn = tk.Menubutton(menubar, text='Help', underline=0)
+		help_menu_btn = ttk.Menubutton(menubar, text='Help', underline=0)
 		help_menu = tk.Menu(help_menu_btn)
 		help_menu.add_command(label='About', underline=0, command=self.on_about)
 		help_menu_btn.config(menu=help_menu)
