@@ -37,7 +37,6 @@ class App:
 		self.status.pack(side=tk.BOTTOM, fill=tk.X)
 
 		self.parent = parent
-		parent.after_idle(self.launch)
 
 
 	def create_panel(self, parent):
@@ -116,28 +115,55 @@ class App:
 				#self.code_view.insert(tk.END, line + '\n')
 		self.code_view.config(state=tk.DISABLED)
 
-
+	def matching_tag_location(self, tag_location, location):
+		if len(tag_location) != 2:
+			print(tag_location)
+			return False
+		start, end = tag_location
+		start_row, start_col = start.split('.')
+		end_row, end_col = end.split('.')
+		if end_row != start_row:
+			print(start_row, end_row)
+			return False
+		row, col = location.split('.')
+		if row != start_row:
+			print(start_row, row)
+			return False
+		if int(col) < int(start_col) or int(col) > int(end_col):
+			print(start_col, col, end_col)
+			return False
+		return True
+		
 	def on_button_click(self, event):
-		print("Button clicked")
+		if event.widget != self.code_view:
+			return
+		location = self.code_view.index("current")
+		print("Button clicked pressed at", location)
+		tags = self.code_view.tag_names(location)
+		if len(tags) < 1:
+			return
+		tag = tags[0]
+		print(tag)
+		if tag.startswith("Token.Name") or tag.endswith("PreprocFile"):
+			row, col = location.split(".")
+			tag_location = self.code_view.tag_prevrange(tag, location)
+			if not self.matching_tag_location(tag_location, location):
+				tag_location = self.code_view.tag_nextrange(tag, location)
+				if not self.matching_tag_location(tag_location, location):
+					return
+			(start, end) = tag_location
+			print(start, end)
+			data = event.widget.get(start, end)
+			print(data)
+#			filename, line_num, working_dir = self.builder.get_location(data)
+#			if filename and line_num and working_dir:
+#				editor.spawn(filename, line_num, working_dir)
+
 
 
 	def on_quit(self, event=None):
 		if messagebox.askokcancel("Quit", "Do you want to quit?"):
 			self.parent.destroy()
-
-	def launch(self, clean=False):
-		builder = self.find_build_type()
-		
-		if builder:
-			self.output_text(str(builder))
-			builder.launch(clean)
-			self.builder = builder
-			self.warning_count = 0;
-			self.error_count = 0;
-			self.parent.after(500, self.check)
-		else:
-			self.builder = None
-			self.output_text("-- NO BUILDER FOUND --")
 
 	def check(self):
 		if self.builder:

@@ -58,7 +58,7 @@ class ConfigDialog:
 		ttk.Button(dialog, text="Choose", command=self.on_choose).grid(row=0, column=2)
 
 		ttk.Label(dialog, text="Args:").grid(row=1, column=0)
-		self.args = tk.Text(dialog, height=10, width=20)
+		self.args = tk.Text(dialog, height=10, width=60)
 		self.args.grid(row=1, column=1, rowspan=3)
 
 		path, args = config.get_configuration().get_editor_details()

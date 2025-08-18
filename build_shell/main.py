@@ -191,12 +191,19 @@ class App:
 
 	def on_about(self, event=None):
 		text = (
-			"Application to launch and capture the build output from ninja, cargo, make or ghs.",
-			"When launched the tool will look for build.ninja, cargo.toml, makefile or default.gpj in the current and subdirectories.",
-			"If found, a search for a matching executable in the standard install locations to execute.",
+			"Application to launch and capture the build output from",
+			"ninja, cargo, make or ghs.",
+			""
+			"When launched the tool will look for",
+			"build.ninja, cargo.toml, makefile or default.gpj",
+			"in the current and subdirectories.",
+			""
+			"If found, a search for a matching executable in the standard",
+			"install locations to execute.",
+			"",
 			"The output is capture in the output pane"
 		)
-		messagebox.showinfo("About", "\n\n".join(text))
+		messagebox.showinfo("About build shell", "\n".join(text))
 
 
 	def on_build_browse(self, event=None):
