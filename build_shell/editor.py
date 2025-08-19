@@ -28,7 +28,7 @@ def substitute(args, filename, line_num):
 def spawn(filename, line_num, working_dir):
 		execute, args =  config.get_configuration().get_editor_details()
 		args = [execute] + substitute(args, filename, line_num)
-		print(args)
+		print(working_dir, args)
 		proc = subprocess.Popen(args, cwd=working_dir, start_new_session=True, close_fds=True)
 
 #		try:

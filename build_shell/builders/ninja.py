@@ -4,8 +4,17 @@ import os
 from builder import Builder as Base
 
 class Builder(Base):
+
 	def __init__(self, build_dir):
 		super().__init__(build_dir)
+		meson_info = os.path.join(build_dir, "meson-info", "meson-info.json")
+		if os.path.exists(meson_info):
+			import json
+			source_dir = json.load(open(meson_info, "rt"))['directories']['source']
+		else:
+			source_dir = None
+		super().__init__(build_dir, source_dir)
+
 
 	def __str__(self):
 		return "-- NINJA BUILDER --"
@@ -46,4 +55,5 @@ class Builder(Base):
 		except ValueError:
 			return None, None, None
 		filename = parts[0].strip()
-		return filename, line_num, self.build_dir
+		filename = self.fixup_paths(filename)
+		return filename, line_num, self.source_dir

@@ -1,8 +1,21 @@
-
+import os
 
 class Builder:
-	def __init__(self, build_dir):
+
+
+	def __init__(self, build_dir, source_dir=None):
 		self.build_dir = build_dir
+		if source_dir:
+			self.source_dir = source_dir
+		else:
+			self.source_dir = build_dir
+
+
+	def fixup_paths(self, filename):
+		"""Update the filename to be relative to the source directory"""
+		full_path = os.path.join(self.build_dir, filename)
+		return os.path.relpath(full_path, self.source_dir)
+
 
 	def get_output(self, gui):
 		self.gui = gui
