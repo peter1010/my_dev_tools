@@ -1,5 +1,5 @@
 try:
-	import build_shell.main as shell
+	import inspector.main as shell
 except ImportError:
 	import main as shell
 

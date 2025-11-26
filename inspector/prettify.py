@@ -29,7 +29,7 @@ class MyFormatter(Formatter):
 #            if style['italic']:
 #                start += '<i>'
 #            if style['underline']:
-#                start += '<u>'
+#				tk_panel.tag_configure(ttype_name, underline=1)
 			self.styles[ttype] = ttype_name
 
 
