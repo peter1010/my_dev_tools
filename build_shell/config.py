@@ -1,3 +1,18 @@
+#
+# config file is located at:
+#
+# $XDG_CONFIG_HOME/dev_tools/build_shell.ini
+# or %APPDATA%\Local\dev_tools\build_shell.ini
+#
+# Contains following
+#
+# [Editor]
+# path = /usr/bin/vim
+# args = +{line}
+#	{fname}
+#
+
+
 import platform
 import os
 from configparser import ConfigParser

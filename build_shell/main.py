@@ -18,6 +18,7 @@ from tkinter import ttk
 from tkinter import filedialog
 
 import editor
+import font_select
 
 try:
 	from ctypes import windll
@@ -131,6 +132,7 @@ class App:
 		tool_menu_btn = ttk.Menubutton(menubar, text='Tools', underline=0)
 		tool_menu = tk.Menu(tool_menu_btn)
 		tool_menu.add_command(label="Editor...", underline=0, command=self.on_editor)
+		tool_menu.add_command(label="Font...", underline=0, command=self.on_font)
 		tool_menu_btn.config(menu=tool_menu)
 		tool_menu_btn.pack(side=tk.LEFT)
 		parent.bind('t', lambda evt: tool_menu_btn.event_generate('<<Invoke>>'))
@@ -208,10 +210,12 @@ class App:
 
 	def on_build_browse(self, event=None):
 		root_dir = filedialog.askdirectory()
-		self.kill_builder()
-		self.clr_output_pane()
-		self.builder = None
-		self.launch(root_dir=root_dir)
+		if root_dir:
+			self.kill_builder()
+			self.clr_output_pane()
+			self.builder = None
+			self.launch(root_dir=root_dir)
+
 
 	def on_stop(self, event=None):
 		self.kill_builder()
@@ -308,6 +312,9 @@ class App:
 	def on_editor(self, event=None):
 		editor.ConfigDialog(self.parent)
 
+	def on_font(self, event=None):
+		font_select.ConfigFont(self.parent)
+
 
 def main():
 	global root
@@ -317,17 +324,6 @@ def main():
 	# Make tkinter aware of monitor DPI for fonts are crisp
 	if windll_loader:
 		windll.shcore.SetProcessDpiAwareness(True)
-
-#	family = font.Font(font='TkFixedFont')["family"]
-
-#	print(family)
-#	return
-
-#	print(font.names())
-	for family in font.families():
-		f = font.Font(family=family)
-		if f.metrics("fixed"):
-			print(family, f.measure("Help"))
 
 	app = App(root)
 	root.mainloop()
